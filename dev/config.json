@@ -1,0 +1,21 @@
+{
+    "URL":"http://localhost/sirade/dev",
+    "token":"aCZCxQHA3Wc1itH8ycD800AymsQwtf0KmljWpHsrLgJc05GoZaMxP9eT0rzmboSaYTZRGxzUWY00tSUuAJ7iko7tdMLBcHYLoyPF3lOVYv0maSopUBoBT2VR",
+    "database": {
+      "host": "127.0.0.1",
+      "username": "root",
+      "password": "root",
+      "databaseName": "SIRADE"
+    },
+    "debug_mode": true,
+    "phpmailer": {
+      "host": "smtp.titan.email",
+      "SMTPAuth": true,
+      "port": 587,
+      "username": "notificaciones@holdingmedicoscrp.com",
+      "key": "hPq9$aC&MF61&s*Y5eGqsav&zgB8GBySq^bmKQ1VDxm&j3COS1",
+      "SMTPDebug": 0,
+      "name": "HOLDING MÉDICOS CRP",
+      "email": "jayroguerreros@gmail.com"
+    }
+  }
