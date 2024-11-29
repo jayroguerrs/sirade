@@ -1,0 +1,1 @@
+export const environment={production:!1,apiSRD:"http://localhost/sirade/dev"};
