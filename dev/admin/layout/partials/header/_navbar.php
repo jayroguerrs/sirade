@@ -31,15 +31,5 @@
         <?php include 'partials/theme-mode/_main.php' ?>
     </div>
     <!--end::Theme mode-->
-    <!--begin::Quick links-->
-    <div class="app-navbar-item ms-2 ms-lg-4">
-        <!--begin::Menu wrapper-->
-        <a href="#" class="btn btn-icon btn-primary fw-bold" data-kt-menu-trigger="click" data-kt-menu-attach="parent"
-            data-kt-menu-placement="bottom-end" data-kt-menu-flip="bottom">
-            <span class="fs-5">3</span>
-        </a>
-        <!--end::Menu wrapper-->
-    </div>
-    <!--end::Quick links-->
 </div>
 <!--end::Navbar-->
