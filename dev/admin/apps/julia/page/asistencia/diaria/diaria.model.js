@@ -42,6 +42,7 @@ var KTDiaria = function() {
                         100, // Fecha
                         100, // Turno
                         100, // Area
+                        140, // Horas Extra
                         160, // Entrada
                         160, // Salida
                         180, // Marca Entrada
@@ -121,11 +122,17 @@ var KTDiaria = function() {
                                 if (row === 0) {
                                     td.style.backgroundColor = '#DDF8FC';
                                 } else {
-                                    const previousCellColor = window.getComputedStyle(instance.getCell(row - 1, 0)).backgroundColor;
-                                    if (instance.getDataAtCell(row, 0) == instance.getDataAtCell(row - 1, 0)) {
-                                        td.style.backgroundColor = previousCellColor;
+                                    const previousCell = instance.getCell(row - 1, 0);
+                                    if (previousCell) { // Verificar que la celda existe
+                                        const previousCellColor = window.getComputedStyle(previousCell).backgroundColor;
+                                        if (instance.getDataAtCell(row, 0) == instance.getDataAtCell(row - 1, 0)) {
+                                            td.style.backgroundColor = previousCellColor;
+                                        } else {
+                                            td.style.backgroundColor = previousCellColor === 'rgb(221, 248, 252)' ? 'rgb(255, 255, 255)' : 'rgb(221, 248, 252)';
+                                        }
                                     } else {
-                                        td.style.backgroundColor = previousCellColor === 'rgb(221, 248, 252)' ? 'rgb(255, 255, 255)' : 'rgb(221, 248, 252)';
+                                        // Si la celda anterior no existe, establecer un color por defecto
+                                        td.style.backgroundColor = 'rgb(255, 255, 255)';
                                     }
                                 }
 
@@ -135,10 +142,20 @@ var KTDiaria = function() {
                             };
                         };
                         
-                        if (col === 9 || col === 10) {  // Comprobar si es la primera columna
+                        if (col === 8 || col === 9) {  // Comprobar si es la primera columna
                             cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
                                 Handsontable.renderers.TextRenderer.apply(this, arguments); // Renderiza el texto de manera predeterminada
                                 td.style.backgroundColor = '#fbffb6';  // Aplica el color de fondo amarillo
+                            };
+                        }
+
+                        // Verificar si el turno es "M1" y hacer la celda de solo lectura
+                        if (col === 5) {
+                            cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
+                                Handsontable.renderers.TextRenderer.apply(this, arguments);
+                                if (value === 'M1') {
+                                    cellProperties.readOnly = true;
+                                }
                             };
                         }
                         
@@ -166,6 +183,7 @@ var KTDiaria = function() {
                                 type: 'dropdown',
                                 source: areas
                             },                                      // Área
+                            { type: 'text', readOnly: true },       // Horas Extra
                             { type: 'text', readOnly: true },       // Hora de Entrada
                             { type: 'text', readOnly: true },       // Hora de Salida
                             { type: 'text', readOnly: false },      // Hora de Entrada
@@ -241,6 +259,7 @@ var KTDiaria = function() {
                                         type: 'dropdown',
                                         source: areas
                                     },                                  // Área
+                                    { type: 'text', readOnly: true },   // Horas Extra
                                     { type: 'text', readOnly: true },   // Hora de Entrada
                                     { type: 'text', readOnly: true },   // Hora de Salida
                                     { type: 'text', readOnly: false },   // Hora de Entrada
@@ -277,9 +296,15 @@ var KTDiaria = function() {
                 changes.forEach(([row, prop, oldValue, newValue]) => {
                     if (oldValue !== newValue) { // This condition prevents the hook from firing when the value hasn't changed
                         // Obtener el nombre de la columna
+                        debugger;
                         var columnName = hot.getColHeader(hot.propToCol(prop));
-
+                        var turno = hot.getDataAtRow(row)[5]; // Asumiendo que el turno está en la columna 3
                         // Agregar el cambio al array
+                        if (turno === "M1") {
+                            // Hacer la celda de solo lectura
+                            hot.setCellMeta(row, hot.propToCol(prop), 'readOnly', true);
+                            hot.render(); // Renderizar la tabla para aplicar los cambios
+                        };
                         cambios.push({
                             colaborador: hot.getDataAtRow(row)[0],
                             id_horario_turno: hot.getDataAtRow(row)[3],

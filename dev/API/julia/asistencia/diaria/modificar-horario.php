@@ -66,7 +66,7 @@
                 }
                 $stmt->close();
             }
-
+            
             if ($contador == 0) {
                 
                 $data = json_decode($V_CAMBIOS, true);
@@ -84,11 +84,10 @@
                         case 'TURNO':
                             // Modificar Turno
                             if ( $valor !== NULL && $valor != '' ) {
-
                                 // Verificar que no exista marcación para la fecha
                                 $stmt = $conn->prepare("SELECT NMARC_ID 
                                                         FROM SRD_MARCACION 
-                                                        WHERE  NHOTU_ID = ? AND (DMARC_MARCA_INICIO <> NULL || DMARC_MARCA_INICIO <> '') 
+                                                        WHERE  NHOTU_ID = ? AND DMARC_MARCA_INICIO IS NOT NULL  
                                                                             AND NAUDI_EST_REG = 1;");
                                 $stmt->bind_param("i", $id_horario_turno);
                                 $stmt->execute();
@@ -101,7 +100,6 @@
                                     if ($stmt->num_rows > 0) {
                                         $stmt->bind_result($id_turno);
                                         $stmt->fetch();
-
                                         $stmt = $conn->prepare("UPDATE SRD_HORARIO_TURNOS 
                                                                 SET CTURN_ID = ?, 
                                                                     NAUDI_REG_UPD = ?,

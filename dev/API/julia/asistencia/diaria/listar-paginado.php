@@ -139,17 +139,26 @@
                                 sd.CDESE_DESCRIPCION 'DESEMPEÑO',
                                 sht.NHOTU_ID 'ID_HORARIO_TURNO',
                                 sht.DHOTU_FECHA 'FECHA',
-                                sht.CTURN_ID 'TURNO',
+                                IF(sht.NHOEX_ID IS NULL, sht.CTURN_ID, she.CTURN_ID) 'TURNO',
                                 sht.CAREA_ID 'AREA',
+                                IF(sht.NHOEX_ID IS NULL, '', she.CHOEX_CODIGO) 'HORAS EXTRAS',
                                 CAST(
                                     IF(
-                                        st.TTURN_HORA_INICIO > st.TTURN_HORA_FIN, 
-                                        CONCAT(DATE_SUB(sht.DHOTU_FECHA, INTERVAL 1 DAY), ' ', st.TTURN_HORA_INICIO), 
-                                        CONCAT(sht.DHOTU_FECHA, ' ', st.TTURN_HORA_INICIO)
+                                        sht.NHOEX_ID IS NULL,
+                                        IF(
+                                            st.TTURN_HORA_INICIO > st.TTURN_HORA_FIN, 
+                                            CONCAT(DATE_SUB(sht.DHOTU_FECHA, INTERVAL 1 DAY), ' ', st.TTURN_HORA_INICIO), 
+                                            CONCAT(sht.DHOTU_FECHA, ' ', st.TTURN_HORA_INICIO)
+                                        ),
+                                        she.DHOEX_FECHA_INICIAL
                                     ) AS DATETIME
                                 ) 'HORA DE ENTRADA',
                                 CAST(
-                                    CONCAT(sht.DHOTU_FECHA, ' ', st.TTURN_HORA_FIN) AS DATETIME
+                                    IF(
+                                        sht.NHOEX_ID IS NULL,
+                                        CONCAT(sht.DHOTU_FECHA, ' ', st.TTURN_HORA_FIN),
+                                        she.DHOEX_FECHA_FINAL
+                                    ) AS DATETIME
                                 ) 'HORA DE SALIDA',
                                 sm.DMARC_MARCA_INICIO 'MARCACIÓN DE ENTRADA',
                                 sm.DMARC_MARCA_FIN 'MARCACIÓN DE SALIDA',
@@ -162,6 +171,7 @@
                             LEFT JOIN srd_desempenio sd ON sd.NDESE_ID = su.NDESE_ID AND sd.NAUDI_EST_REG = 1 AND sd.NDESE_ESTADO = 1
                             LEFT JOIN srd_ocupacion so ON so.NOCUP_ID = su.NOCUP_ID AND so.NAUDI_EST_REG = 1 AND so.NOCUP_ESTADO = 1
                             LEFT JOIN srd_horario_turnos sht ON sht.NHORA_ID = sh.NHORA_ID AND sht.NAUDI_EST_REG = 1 AND sht.NHOTU_ESTADO = 1
+                            LEFT JOIN srd_horas_extras she ON she.NHOEX_ID = sht.NHOEX_ID AND she.NHOEX_ESTADO = 1 AND she.NAUDI_EST_REG = 1
                             LEFT JOIN srd_turno st ON st.CTURN_ID = sht.CTURN_ID AND st.NTURN_ESTADO = 1 AND st.NAUDI_EST_REG = 1
                             LEFT JOIN srd_marcacion sm ON sm.NHOTU_ID = sht.NHOTU_ID AND sm.NMARC_ESTADO = 1 AND sm.NAUDI_EST_REG = 1
                             WHERE ";
