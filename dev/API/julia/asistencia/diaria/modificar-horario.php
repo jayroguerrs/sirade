@@ -76,6 +76,7 @@
 
                     $colaborador        = $change['colaborador'];
                     $fecha              = $change['fecha'];
+                    $hora_extra         = trim($change['hora_extra']);
                     $id_horario_turno   = $change['id_horario_turno'];
                     $valor              = $change['valor_nuevo'];
                     $columna            = $change['columna'];
@@ -83,36 +84,38 @@
                     switch ($columna) {
                         case 'TURNO':
                             // Modificar Turno
-                            if ( $valor !== NULL && $valor != '' ) {
-                                // Verificar que no exista marcación para la fecha
-                                $stmt = $conn->prepare("SELECT NMARC_ID 
-                                                        FROM SRD_MARCACION 
-                                                        WHERE  NHOTU_ID = ? AND DMARC_MARCA_INICIO IS NOT NULL  
-                                                                            AND NAUDI_EST_REG = 1;");
-                                $stmt->bind_param("i", $id_horario_turno);
-                                $stmt->execute();
-                                $stmt->store_result();
-                                if ($stmt->num_rows == 0) {
-                                    $stmt = $conn->prepare("SELECT CTURN_ID FROM SRD_TURNO WHERE CTURN_ID = ? AND NAUDI_EST_REG = 1;");
-                                    $stmt->bind_param("s", $valor);
+                            if ($hora_extra == NULL || $hora_extra == '') {
+                                if ( $valor !== NULL && $valor != '' ) {
+                                    // Verificar que no exista marcación para la fecha
+                                    $stmt = $conn->prepare("SELECT NMARC_ID 
+                                                            FROM SRD_MARCACION 
+                                                            WHERE  NHOTU_ID = ? AND DMARC_MARCA_INICIO IS NOT NULL  
+                                                                                AND NAUDI_EST_REG = 1;");
+                                    $stmt->bind_param("i", $id_horario_turno);
                                     $stmt->execute();
                                     $stmt->store_result();
-                                    if ($stmt->num_rows > 0) {
-                                        $stmt->bind_result($id_turno);
-                                        $stmt->fetch();
-                                        $stmt = $conn->prepare("UPDATE SRD_HORARIO_TURNOS 
-                                                                SET CTURN_ID = ?, 
-                                                                    NAUDI_REG_UPD = ?,
-                                                                    DAUDI_REG_UPD = NOW()
-                                                                WHERE NHOTU_ID = ?;");
-                                        $stmt->bind_param("sii", $id_turno, $V_ID, $id_horario_turno);
+                                    if ($stmt->num_rows == 0) {
+                                        $stmt = $conn->prepare("SELECT CTURN_ID FROM SRD_TURNO WHERE CTURN_ID = ? AND NAUDI_EST_REG = 1;");
+                                        $stmt->bind_param("s", $valor);
                                         $stmt->execute();
-                                        // Verificar si se llegó a realizar el cambio
-                                        if ($stmt->affected_rows > 0) {
-                                            $cambios +=1;
-                                        }
-                                    } 
-                                    $stmt->close();
+                                        $stmt->store_result();
+                                        if ($stmt->num_rows > 0) {
+                                            $stmt->bind_result($id_turno);
+                                            $stmt->fetch();
+                                            $stmt = $conn->prepare("UPDATE SRD_HORARIO_TURNOS 
+                                                                    SET CTURN_ID = ?, 
+                                                                        NAUDI_REG_UPD = ?,
+                                                                        DAUDI_REG_UPD = CURRENT_TIMESTAMP()
+                                                                    WHERE NHOTU_ID = ?;");
+                                            $stmt->bind_param("sii", $id_turno, $V_ID, $id_horario_turno);
+                                            $stmt->execute();
+                                            // Verificar si se llegó a realizar el cambio
+                                            if ($stmt->affected_rows > 0) {
+                                                $cambios +=1;
+                                            }
+                                        } 
+                                        $stmt->close();
+                                    }
                                 }
                             }
                             break;

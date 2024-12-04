@@ -9,13 +9,11 @@
     
     // Obtener los valores enviados desde el frontend
     $V_ESTA = !isset($_POST["estado"]) ? null : ($_POST["estado"] === '0' ? '0' : ($_POST["estado"] == '' ? null : $_POST["estado"]));
-    $V_SERV = !isset($_POST["servicio"]) ? null : ($_POST["servicio"] == '' ? null : $_POST["servicio"]);
-    $V_SUPER = !isset($_POST["supervisor"]) ? null : ($_POST["supervisor"] == '' ? null : $_POST["supervisor"]);
-    $V_PERIODO = !isset($_POST["periodo"]) ? null : ($_POST["periodo"] == '' ? null : $_POST["periodo"]);
     $V_COLABORADOR = !isset($_POST["colaborador"]) ? null : ($_POST["colaborador"] == '' ? null : $_POST["colaborador"]);
     $V_OCUPACION = !isset($_POST["ocupacion"]) ? null : ($_POST["ocupacion"] == '' ? null : $_POST["ocupacion"]);
     $V_DESEMPEÑO = !isset($_POST["desempenio"]) ? null : ($_POST["desempenio"] == '' ? null : $_POST["desempenio"]);
     $V_AREAPERIODO = !isset($_POST["areaperiodo"]) ? null : ($_POST["areaperiodo"] == '' ? null : $_POST["areaperiodo"]);
+    $V_FECHA = !isset($_POST["fecha"]) ? null : ($_POST["fecha"] == '' ? null : $_POST["fecha"]);
     $V_ID = !isset($_POST["usuario"]) ? null : ($_POST["usuario"] == '' ? null : $_POST["usuario"]);
     $V_ROL = !isset($_POST["usuario_rol"]) ? NULL : ($_POST["usuario_rol"] == '' ? NULL : $_POST["usuario_rol"]);
 
@@ -38,15 +36,15 @@
 
         // VALIDAMOS EL ID DEL SUPERVISOR
         if ( $V_ID === NULL || $V_ID == '' ) {
-            $error = 'El ID del supervisor es obligatorio';
+            $error = 'El ID del usuario es obligatorio';
             $contador += 1;
             $earray[$contador] = $error;
         } else {
             $stmt = $conn->prepare("SELECT A.NUSUA_ID, B.NROLE_ID 
-                                        FROM SRD_USUARIOS A
-                                        INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
-                                        WHERE A.NUSUA_ID = ? AND A.NAUDI_EST_REG = 1;");
-            $stmt->bind_param("i", $V_ID);
+                                    FROM SRD_USUARIOS A
+                                    INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
+                                    WHERE A.NUSUA_ID = ? AND B.NROLE_ID = ? AND A.NAUDI_EST_REG = 1;");
+            $stmt->bind_param("ii", $V_ID, $V_ROL);
             $stmt->execute();
             $stmt->store_result();
             if ($stmt->num_rows > 0) {
@@ -55,12 +53,14 @@
                 if ( $idusuario != $_SESSION['id'] ) {
                     $error = 'El usuario no puede realizar dicha operación';
                     $contador += 1;
+                    $est = 2;
                     $contadorsession += 1;
                     $earray[$contador] = $error;
                 }
                 if ( $idrol != $_SESSION['rol_id'] ) {
                     $error = 'El rol del usuario no corresponde a la operación';
                     $contador += 1;
+                    $est = 2;
                     $contadorsession += 1;
                     $earray[$contador] = $error;
                 }

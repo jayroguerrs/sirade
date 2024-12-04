@@ -263,27 +263,22 @@
                                     <!--begin::Select2-->
                                     <select class="form-select form-select-solid mb-2" name="filtro-periodos" data-control="select2"
                                             data-placeholder="Seleccione un periodo" data-allow-clear="true" data-dropdown-parent="#kt_periodos_filtro_modal">
-                                        <option></option>
-                                        <?php
-                                            $sql = "SELECT DISTINCT 
-                                                        A.NPERI_ID,
-                                                        A.CPERI_DESCRIPCION,
-                                                        A.DPERI_FIN
-                                                    FROM SRD_PERIODO A
-                                                    WHERE A.NPERI_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND A.CAPLI_ID = 'ENF_002'
-                                                    ORDER BY A.DPERI_FIN DESC;";
-                                            $result = $conn->query($sql);
-                                            if ($result->num_rows > 0) {
-                                                // output data of each row
-                                                while($row = $result->fetch_assoc()) { ?>
-                                                    <option value="<?php echo $row["NPERI_ID"]; ?>"><?php echo $row["CPERI_DESCRIPCION"]; ?></option> <?php
-                                                }
-                                            }
-                                        ?>
                                     </select>
                                     <!--end::Select2-->
                                 </div>
                                 <!--end::Input group-->
+
+                                <!--begin::Input group-->
+                                <div class="fv-row mb-10">
+                                        <!--begin::Label-->
+                                        <label class="fs-5 fw-semibold form-label mb-5">Fecha:</label>
+                                        <!--end::Label-->
+
+                                        <!--begin::Input-->
+                                        <input class="form-control form-control-solid" placeholder="Seleccione una fecha" name="filtro-fecha" />
+                                        <!--end::Input-->
+                                    </div>
+                                    <!--end::Input group-->
 
                                 <!--begin::Input group-->
                                 <div class="fv-row mb-7">

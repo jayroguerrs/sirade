@@ -12,13 +12,12 @@
         
         // Obtener los valores enviados desde el frontend
         $V_ESTA = !isset($_POST["estado"]) ? null : ($_POST["estado"] === '0' ? '0' : ($_POST["estado"] == '' ? null : $_POST["estado"]));
-        $V_SERV = !isset($_POST["servicio"]) ? null : ($_POST["servicio"] == '' ? null : $_POST["servicio"]);
-        $V_SUPER = !isset($_POST["supervisor"]) ? null : ($_POST["supervisor"] == '' ? null : $_POST["supervisor"]);
-        $V_FECHA = !isset($_POST["fecha"]) ? null : ($_POST["fecha"] == '' ? null : $_POST["fecha"]);
         $V_COLABORADOR = !isset($_POST["colaborador"]) ? null : ($_POST["colaborador"] == '' ? null : $_POST["colaborador"]);
         $V_OCUPACION = !isset($_POST["ocupacion"]) ? null : ($_POST["ocupacion"] == '' ? null : $_POST["ocupacion"]);
         $V_DESEMPEÑO = !isset($_POST["desempenio"]) ? null : ($_POST["desempenio"] == '' ? null : $_POST["desempenio"]);
         $V_AREAPERIODO = !isset($_POST["areaperiodo"]) ? null : ($_POST["areaperiodo"] == '' ? null : $_POST["areaperiodo"]);
+        $V_PERIODO = !isset($_POST["periodo"]) ? null : ($_POST["periodo"] == '' ? null : $_POST["periodo"]);
+        $V_FECHA = !isset($_POST["fecha"]) ? null : ($_POST["fecha"] == '' ? null : $_POST["fecha"]);
         $V_ID = !isset($_POST["usuario"]) ? null : ($_POST["usuario"] == '' ? null : $_POST["usuario"]);
         $V_ROL = !isset($_POST["usuario_rol"]) ? NULL : ($_POST["usuario_rol"] == '' ? NULL : $_POST["usuario_rol"]);
         
@@ -80,6 +79,47 @@
                     $earray[$contador] = $error;
                 }
                 $stmt->close();
+            }
+
+            // VALIDAMOS EL PERIODO
+            if ( $V_PERIODO === NULL || $V_PERIODO == '' ) {
+            } else {
+                $stmt = $conn->prepare("SELECT A.NPERI_ID FROM SRD_PERIODO A
+                                        WHERE A.NPERI_ID = ? AND A.NPERI_ESTADO = 1 AND A.NAUDI_EST_REG = 1;");
+                $stmt->bind_param("i", $V_PERIODO);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows > 0) {
+                } else {
+                    $error = 'El ID del periodo no se encuentra registrado';
+                    $contador += 1;
+                    $earray[$contador] = $error;
+                }
+                $stmt->close();
+            }
+
+            // VALIDAMOS LA FECHA, DEBE TENER FORMATO "YYYY-MM-DD" Y DEBE ESTAR DENTRO DEL RANGO DEL PERIODO
+            if ( $V_FECHA === NULL || $V_FECHA == '' ) {
+            } else {
+                if ( !preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $V_FECHA) ) {
+                    $error = 'El formato de la fecha es incorrecto';
+                    $contador += 1;
+                    $earray[$contador] = $error;
+                } else {
+                    $V_FECHA = date('Y-m-d', strtotime($V_FECHA));
+                    $stmt = $conn->prepare("SELECT A.NPERI_ID FROM SRD_PERIODO A
+                                            WHERE A.NPERI_ID = ? AND A.DPERI_INICIO <= ? AND A.DPERI_FIN >= ? AND A.NPERI_ESTADO = 1 AND A.NAUDI_EST_REG = 1;");
+                    $stmt->bind_param("iss", $V_PERIODO, $V_FECHA, $V_FECHA);
+                    $stmt->execute();
+                    $stmt->store_result();
+                    if ($stmt->num_rows > 0) {
+                    } else {
+                        $error = 'La fecha no se encuentra dentro del rango del periodo';
+                        $contador += 1;
+                        $earray[$contador] = $error;
+                    }
+                    $stmt->close();
+                }
             }
 
             // VALIDAMOS EL ID DE OCUPACIÓN
@@ -177,6 +217,10 @@
                             WHERE ";
                 
                 //Filtros de Busqueda personalizados
+                if (!empty($V_PERIODO) && isset($V_PERIODO)) {
+                    $query .= "ssap.NPERI_ID = " . $V_PERIODO . " AND ";
+                }
+
                 if (!empty($V_FECHA) && isset($V_FECHA)) {
                     $query .= "sht.DHOTU_FECHA = '" . $V_FECHA . "' AND ";
                 }
@@ -196,6 +240,8 @@
                 if (!empty($V_COLABORADOR) && isset($V_COLABORADOR)) {
                     $query .= "SU.CUSUA_NOMBRES LIKE '%" . $V_COLABORADOR . "%' AND ";
                 }
+                //Fin Filtros de Busqueda personalizados
+
 
                 $query .= " SH.NHORA_ESTADO = 1 AND SH.NAUDI_EST_REG = 1 
                             ORDER BY su.CUSUA_NOMBRES, st.TTURN_HORA_INICIO ; ";

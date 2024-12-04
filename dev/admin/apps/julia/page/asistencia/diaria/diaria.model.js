@@ -35,20 +35,20 @@ var KTDiaria = function() {
             manualColumnResize : true,
             autoWrapRow: true,
             autoWrapCol: true,
-            colWidths: [250, // Colaborador
-                        120, // Area Periodo
-                        100, // Desempeño
-                        100, // Id Horario Turno
-                        100, // Fecha
-                        100, // Turno
-                        100, // Area
-                        140, // Horas Extra
-                        160, // Entrada
-                        160, // Salida
-                        180, // Marca Entrada
-                        180, // Marca Salida
-                        250, // Obs Entrada
-                        250  // Obs Salida
+            colWidths: [250, // Colaborador         [0]
+                        120, // Area Periodo        [1]
+                        100, // Desempeño           [2]
+                        100, // Id Horario Turno    [3]
+                        100, // Fecha               [4]
+                        100, // Turno               [5]
+                        100, // Area                [6]
+                        140, // Horas Extra         [7]
+                        160, // Entrada             [8]
+                        160, // Salida              [9]
+                        180, // Marca Entrada       [10]
+                        180, // Marca Salida        [11]
+                        250, // Obs Entrada         [12]
+                        250  // Obs Salida          [13]
                     ],
             licenseKey: "non-commercial-and-evaluation"
         });
@@ -60,9 +60,9 @@ var KTDiaria = function() {
 
         customStylesRenderer = (hotInstance, TD, ...rest) => {
             Handsontable.renderers.TextRenderer(hotInstance, TD, ...rest);
-            TD.style.fontWeight = 'bold';
-            TD.style.color = 'green';
-            TD.style.background = '#d7f1e1';
+            //TD.style.fontWeight = 'bold';
+            TD.style.color = 'white';
+            TD.style.background = '#72abff';
         };
 
         Handsontable.renderers.registerRenderer(
@@ -70,6 +70,69 @@ var KTDiaria = function() {
             customStylesRenderer
         );
     }
+
+    var initComponentes = () => {
+        return new Promise((resolve, reject) => {
+            msgLoad("Procesando...");
+            var datos = new FormData();
+            datos.append('usuario', $("#session_usuario_id").val());
+            datos.append('usuario_rol', $("#session_rol_id").val());
+            datos.append('idapp', 'ENF_002');
+            datos.append('estado', 1); 
+        
+            const selectElement = $('[name="filtro-periodos"]');
+        
+            fetch(`${environment.apiSRD}/API/periodos/listar-cmb`, {
+                method: 'POST',
+                body: datos
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.estado === 1) {
+                    const selectData = data.data.map(periodo => ({
+                        id: periodo.Id,
+                        text: periodo.Periodo,
+                        inicio: periodo.Inicio,
+                        fin: periodo.Fin
+                    }));
+        
+                    selectElement.empty();
+                    selectElement.select2({
+                        placeholder: "Seleccione un periodo",
+                        allowClear: true,
+                        data: selectData
+                    });
+        
+                    selectElement.val(selectData[0].id).trigger('change');
+                    msgAutoClose();
+                    resolve(); // Resuelve la promesa cuando se completa la inicialización
+                } else {
+                    console.error('Error en la respuesta:', data.mensaje);
+                    reject(data.mensaje); // Rechaza la promesa en caso de error
+                }
+            }).catch(error => {
+                console.error('Error al obtener los periodos:', error);
+                reject(error); // Rechaza la promesa en caso de error
+            });
+        
+            let ft = $("[name=filtro-fecha]").flatpickr({
+                altInput: true,
+                altFormat: "d/m/Y",
+                dateFormat: "Y-m-d",
+                locale: "es"
+            });
+        
+            selectElement.on('change', function() {
+                const selectedOption = selectElement.select2('data')[0];
+                if (selectedOption) {
+                    const inicio = selectedOption.inicio;
+                    const fin = selectedOption.fin;
+                    ft.set('minDate', inicio);
+                    ft.set('maxDate', fin);
+                }
+            });
+        });
+    };
     
     var initDatatable1 = () => {
         msgLoad("Procesando...");
@@ -78,18 +141,9 @@ var KTDiaria = function() {
         datos.append('usuario', $("#session_usuario_id").val());
         datos.append('usuario_rol', $("#session_rol_id").val());
         // Colocar el primer valor del periodo por defecto
-        //datos.append('periodo', $('[name="filtro-periodos"]').val());
-        // Get all options from the select2
-        var options = $('[name="filtro-periodos"]').find('option');
-
-        // Get the first option value
-        firstOptionValue = options.eq(1).val();
-
-        // Set the first option value as the selected value
-        $('[name="filtro-periodos"]').val(firstOptionValue).trigger('change');
 
         // Append the selected value to the form data
-        //datos.append('periodo', firstOptionValue);
+        datos.append('periodo', $('[name="filtro-periodos"]').val());
         datos.append('fecha', '2024-05-01');
 
         // Fetch data from the API
@@ -111,58 +165,61 @@ var KTDiaria = function() {
                     colHeaders: colHeaders, 
                     columns: colHeaders.map(() => ({ type: 'text' })),
                     width: '100%',
-                    // Configuración de la función cells para aplicar estilos a la primera columna
                     cells: function(row, col) {
                         const cellProperties = {};
-                        if (col === 0 || col === 1 || col === 2 || col === 4 || col === 7 || col === 8) {  // Comprobar si es la primera columna
-                            cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
-
-                                Handsontable.renderers.TextRenderer.apply(this, arguments); // Renderiza el texto de manera predeterminada
-
-                                if (row === 0) {
-                                    td.style.backgroundColor = '#DDF8FC';
-                                } else {
-                                    const previousCell = instance.getCell(row - 1, 0);
-                                    if (previousCell) { // Verificar que la celda existe
-                                        const previousCellColor = window.getComputedStyle(previousCell).backgroundColor;
-                                        if (instance.getDataAtCell(row, 0) == instance.getDataAtCell(row - 1, 0)) {
-                                            td.style.backgroundColor = previousCellColor;
-                                        } else {
-                                            td.style.backgroundColor = previousCellColor === 'rgb(221, 248, 252)' ? 'rgb(255, 255, 255)' : 'rgb(221, 248, 252)';
-                                        }
+                        // Pintar de verde ("#00b2a9") toda la fila si es un turno de Hora Extra
+                        if (this.instance.getDataAtCell(row, 7)) {
+                            if (cellProperties.renderer) {
+                            } else {
+                                cellProperties.renderer = customStylesRenderer;
+                            }
+                        }
+                        
+                        if (col === 0 || col === 1 || col === 2 || col === 4 || col === 7 || col === 10 || col === 11 || col === 12 || col === 13 ) {
+                            // Primero verificar si está ya se encuentra pintado de algún color
+                            if (cellProperties.renderer) {
+                            } else {
+                                cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
+                                    Handsontable.renderers.TextRenderer.apply(this, arguments);
+                                    if (row === 0) {
+                                        td.style.backgroundColor = '#DDF8FC';
                                     } else {
-                                        // Si la celda anterior no existe, establecer un color por defecto
-                                        td.style.backgroundColor = 'rgb(255, 255, 255)';
+                                        const previousCell = instance.getCell(row - 1, 0);
+                                        if (previousCell) {
+                                            const previousCellColor = window.getComputedStyle(previousCell).backgroundColor;
+                                            if (instance.getDataAtCell(row, 0) == instance.getDataAtCell(row - 1, 0)) {
+                                                td.style.backgroundColor = previousCellColor;
+                                            } else {
+                                                td.style.backgroundColor = previousCellColor === 'rgb(221, 248, 252)' ? 'rgb(255, 255, 255)' : 'rgb(221, 248, 252)';
+                                            }
+                                        } else {
+                                            td.style.backgroundColor = 'rgb(255, 255, 255)';
+                                        }
                                     }
-                                }
-
-                                // Asegurarse de que el color del texto es negro
-                                td.style.color = 'black';
-
-                            };
-                        };
-                        
-                        if (col === 8 || col === 9) {  // Comprobar si es la primera columna
-                            cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
-                                Handsontable.renderers.TextRenderer.apply(this, arguments); // Renderiza el texto de manera predeterminada
-                                td.style.backgroundColor = '#fbffb6';  // Aplica el color de fondo amarillo
-                            };
+                                    td.style.color = 'black';
+                                };
+                            }
                         }
-
-                        // Verificar si el turno es "M1" y hacer la celda de solo lectura
+                        // Pintar de amarillo las celdas que no se pueden modificar
+                        if (col === 8 || col === 9) {
+                            if (cellProperties.renderer) {
+                            } else {
+                                cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
+                                    Handsontable.renderers.TextRenderer.apply(this, arguments);
+                                    td.style.backgroundColor = '#fbffb6';
+                                    td.style.color = 'black';
+                                };
+                            }
+                        }
+                        // Hacer de solo lectura la celda de turno si es una Hora Extra
                         if (col === 5) {
-                            cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
-                                Handsontable.renderers.TextRenderer.apply(this, arguments);
-                                if (value === 'M1') {
-                                    cellProperties.readOnly = true;
-                                }
-                            };
+                            if (this.instance.getDataAtCell(row, 7)) {
+                                cellProperties.readOnly = true;
+                            }
                         }
-                        
+    
                         return cellProperties;
-
                     },
-
                 });
 
                 // Obtener los datos de turnos antes de inicializar Handsontable
@@ -296,19 +353,13 @@ var KTDiaria = function() {
                 changes.forEach(([row, prop, oldValue, newValue]) => {
                     if (oldValue !== newValue) { // This condition prevents the hook from firing when the value hasn't changed
                         // Obtener el nombre de la columna
-                        debugger;
                         var columnName = hot.getColHeader(hot.propToCol(prop));
-                        var turno = hot.getDataAtRow(row)[5]; // Asumiendo que el turno está en la columna 3
                         // Agregar el cambio al array
-                        if (turno === "M1") {
-                            // Hacer la celda de solo lectura
-                            hot.setCellMeta(row, hot.propToCol(prop), 'readOnly', true);
-                            hot.render(); // Renderizar la tabla para aplicar los cambios
-                        };
                         cambios.push({
                             colaborador: hot.getDataAtRow(row)[0],
                             id_horario_turno: hot.getDataAtRow(row)[3],
                             fecha: hot.getDataAtRow(row)[4],
+                            hora_extra: hot.getDataAtRow(row)[7],
                             valor_nuevo: newValue,
                             columna: columnName
                         });
@@ -376,7 +427,6 @@ var KTDiaria = function() {
             })
             .then(response => response.text())
             .then(text => {
-                console.log(text);
                 // Crear un Blob en UTF-8 (el contenido ya debe incluir BOM desde el servidor)
                 const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
                 const url = window.URL.createObjectURL(blob);
@@ -417,7 +467,7 @@ var KTDiaria = function() {
         return fetch(`${environment.apiSRD}/API/julia/turnos/listar-cmb-tabla`, {
             method: 'POST',
             body: formData
-        }) // Reemplaza con la URL de tu API
+        })
             .then(response => response.json())
             .then(data => data.data); // Ajusta según la estructura de tu respuesta
     }
@@ -430,7 +480,7 @@ var KTDiaria = function() {
         return fetch(`${environment.apiSRD}/API/julia/servicios/listar-cmb-tabla`, {
             method: 'POST',
             body: formData
-        }) // Reemplaza con la URL de tu API
+        })
             .then(response => response.json())
             .then(data => data.data); // Ajusta según la estructura de tu respuesta
     }
@@ -438,15 +488,16 @@ var KTDiaria = function() {
     // Public methods
     return {
         init: function() {
-            //formPeriodo = document.getElementById('form_modal_agregar_periodos');
-            //submitPeriodo = document.getElementById('kt_modal_agregar_periodos_submit');
-            //cancelarPeriodo = document.getElementById('kt_modal_agregar_periodos_cancel');
-            initTableSettings();
-            initDatatable1();
-            updateTableHeight();
-            modificarCelda();
-            handleActualizar();
-            handleExportar();
+            initComponentes().then(() => {
+                initDatatable1();
+                initTableSettings();
+                updateTableHeight();
+                modificarCelda();
+                handleActualizar();
+                handleExportar();
+            }).catch(error => {
+                console.error('Error durante la inicialización:', error);
+            });
         },
         updateTableHeight: updateTableHeight 
     }
