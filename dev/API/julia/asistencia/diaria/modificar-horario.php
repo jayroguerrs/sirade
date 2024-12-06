@@ -280,7 +280,7 @@
 
                         case 'OBSERVACIÓN ENTRADA':
                             // Modificar Observación Entrada y máximo 200 caracteres
-                            if ( $valor !== NULL && $valor != '' && strlen($valor) <= 200 ) {
+                            if ( $valor === null || strlen($valor) <= 200 ) {
                                 $stmt = $conn->prepare("UPDATE SRD_HORARIO_TURNOS 
                                                         SET CHOTU_OBS_INICIAL = ?, 
                                                             NAUDI_REG_UPD = ?,

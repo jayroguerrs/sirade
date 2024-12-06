@@ -20,7 +20,10 @@
         $V_FECHA = !isset($_POST["fecha"]) ? null : ($_POST["fecha"] == '' ? null : $_POST["fecha"]);
         $V_ID = !isset($_POST["usuario"]) ? null : ($_POST["usuario"] == '' ? null : $_POST["usuario"]);
         $V_ROL = !isset($_POST["usuario_rol"]) ? NULL : ($_POST["usuario_rol"] == '' ? NULL : $_POST["usuario_rol"]);
-        
+        $V_TIPO_M = !isset($_POST["tipo_m"]) ? null : ($_POST["tipo_m"] == '' ? null : $_POST["tipo_m"]);
+        $V_TIPO_T = !isset($_POST["tipo_t"]) ? null : ($_POST["tipo_t"] == '' ? null : $_POST["tipo_t"]);
+        $V_TIPO_N = !isset($_POST["tipo_n"]) ? null : ($_POST["tipo_n"] == '' ? null : $_POST["tipo_n"]);
+
         try {
             
             $contador = 0;
@@ -83,6 +86,9 @@
 
             // VALIDAMOS EL PERIODO
             if ( $V_PERIODO === NULL || $V_PERIODO == '' ) {
+                $error = 'El ID del periodo es obligatorio';
+                $contador += 1;
+                $earray[$contador] = $error;
             } else {
                 $stmt = $conn->prepare("SELECT A.NPERI_ID FROM SRD_PERIODO A
                                         WHERE A.NPERI_ID = ? AND A.NPERI_ESTADO = 1 AND A.NAUDI_EST_REG = 1;");
@@ -100,6 +106,9 @@
 
             // VALIDAMOS LA FECHA, DEBE TENER FORMATO "YYYY-MM-DD" Y DEBE ESTAR DENTRO DEL RANGO DEL PERIODO
             if ( $V_FECHA === NULL || $V_FECHA == '' ) {
+                $error = 'La fecha es obligatoria';
+                $contador += 1;
+                $earray[$contador] = $error;
             } else {
                 if ( !preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $V_FECHA) ) {
                     $error = 'El formato de la fecha es incorrecto';
@@ -239,6 +248,24 @@
         
                 if (!empty($V_COLABORADOR) && isset($V_COLABORADOR)) {
                     $query .= "SU.CUSUA_NOMBRES LIKE '%" . $V_COLABORADOR . "%' AND ";
+                }
+
+                // Filtros de tipo de turno
+                $tipoTurnoConditions = [];
+                if (!empty($V_TIPO_M) && isset($V_TIPO_M)) {
+                    $tipoTurnoConditions[] = "ST.CTURN_TIPO LIKE '%" . $V_TIPO_M . "%'";
+                }
+
+                if (!empty($V_TIPO_T) && isset($V_TIPO_T)) {
+                    $tipoTurnoConditions[] = "ST.CTURN_TIPO LIKE '%" . $V_TIPO_T . "%'";
+                }
+
+                if (!empty($V_TIPO_N) && isset($V_TIPO_N)) {
+                    $tipoTurnoConditions[] = "ST.CTURN_TIPO LIKE '%" . $V_TIPO_N . "%'";
+                }
+
+                if (!empty($tipoTurnoConditions)) {
+                    $query .= " (" . implode(" OR ", $tipoTurnoConditions) . ") AND ";
                 }
                 //Fin Filtros de Busqueda personalizados
 

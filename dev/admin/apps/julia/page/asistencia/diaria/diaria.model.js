@@ -7,14 +7,10 @@ var KTDiaria = function() {
     // Shared variables
     
     var validator;
-    var table;
     var submitPeriodo;
-    var formPeriodo;
+    var formDiario;
     var cancelarPeriodo;
-    var firstOptionValue;
-    var dt1;
     var ft;
-    var ft1;
     var hot;
     var customStylesRenderer;
     var cambios = [];
@@ -35,6 +31,7 @@ var KTDiaria = function() {
             manualColumnResize : true,
             autoWrapRow: true,
             autoWrapCol: true,
+            width: '100%',
             colWidths: [250, // Colaborador         [0]
                         120, // Area Periodo        [1]
                         100, // Desempeño           [2]
@@ -50,6 +47,59 @@ var KTDiaria = function() {
                         250, // Obs Entrada         [12]
                         250  // Obs Salida          [13]
                     ],
+            cells: function(row, col) {
+                const cellProperties = {};
+                // Pintar de azul toda la fila si es un turno de Hora Extra
+                /*
+                if (this.instance.getDataAtCell(row, 7) != '' && this.instance.getDataAtCell(row, 7) != null) {
+                    if (!cellProperties.renderer) {
+                        cellProperties.renderer = customStylesRenderer;
+                    }
+                }*/
+                
+                if (col === 0 || col === 1 || col === 2 || col === 4 || col === 7 || col === 10 || col === 11 || col === 12 || col === 13 ) {
+                    // Primero verificar si está ya se encuentra pintado de algún color
+                    if (!cellProperties.renderer) {
+                        cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
+                            Handsontable.renderers.TextRenderer.apply(this, arguments);
+                            if (row === 0) {
+                                td.style.backgroundColor = '#DDF8FC';
+                            } else {
+                                const previousCell = instance.getCell(row - 1, 0);
+                                if (previousCell) {
+                                    const previousCellColor = window.getComputedStyle(previousCell).backgroundColor;
+                                    if (instance.getDataAtCell(row, 0) == instance.getDataAtCell(row - 1, 0)) {
+                                        td.style.backgroundColor = previousCellColor;
+                                    } else {
+                                        td.style.backgroundColor = previousCellColor === 'rgb(221, 248, 252)' ? 'rgb(255, 255, 255)' : 'rgb(221, 248, 252)';
+                                    }
+                                } else {
+                                    td.style.backgroundColor = 'rgb(255, 255, 255)';
+                                }
+                            }
+                            td.style.color = 'black';
+                        };
+                    }
+                }
+                // Pintar de amarillo las celdas que no se pueden modificar
+                if (col === 8 || col === 9) {
+                    if (!cellProperties.renderer) {
+                        cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
+                            Handsontable.renderers.TextRenderer.apply(this, arguments);
+                            td.style.backgroundColor = '#fbffb6';
+                            td.style.color = 'black';
+                        };
+                    }
+                }
+                // Hacer de solo lectura la celda de turno si es una Hora Extra
+                if (col === 5) {
+                    if (this.instance.getDataAtCell(row, 7)) {
+                        cellProperties.readOnly = true;
+                    }
+                }
+
+                return cellProperties;
+            },
             licenseKey: "non-commercial-and-evaluation"
         });
 
@@ -69,6 +119,12 @@ var KTDiaria = function() {
             'customStylesRenderer',
             customStylesRenderer
         );
+        const noRecordsMessage = document.getElementById('noRecordsMessage');
+        const table = document.getElementById('HSTable');
+
+        table.style.display = 'none';
+        noRecordsMessage.style.display = 'block';
+
     }
 
     var initComponentes = () => {
@@ -115,7 +171,7 @@ var KTDiaria = function() {
                 reject(error); // Rechaza la promesa en caso de error
             });
         
-            let ft = $("[name=filtro-fecha]").flatpickr({
+            ft = $("[name=filtro-fecha]").flatpickr({
                 altInput: true,
                 altFormat: "d/m/Y",
                 dateFormat: "Y-m-d",
@@ -133,162 +189,44 @@ var KTDiaria = function() {
             });
         });
     };
-    
-    var initDatatable1 = () => {
-        msgLoad("Procesando...");
-        // Crear un nuevo objeto FormData
-        var datos = new FormData(formPeriodo);
-        datos.append('usuario', $("#session_usuario_id").val());
-        datos.append('usuario_rol', $("#session_rol_id").val());
-        // Colocar el primer valor del periodo por defecto
-
-        // Append the selected value to the form data
-        datos.append('periodo', $('[name="filtro-periodos"]').val());
-        datos.append('fecha', '2024-05-01');
-
-        // Fetch data from the API
-        fetch(`${environment.apiSRD}/API/julia/asistencia/diaria/listar-paginado`, {
-            method: 'POST',
-            body: datos
-        })
-        .then(response => response.json())
-        .then(datos => {
-            if (datos.estado == 1) {
-                // Prepare the data
-                const apiData = datos.data;
-                const colHeaders = Object.keys(apiData[0]);
-                const tableData = apiData.map(item => Object.values(item));
-
-                // Initialize Handsontable with dynamic headers and data
-                hot.updateSettings({ 
-                    data: tableData, 
-                    colHeaders: colHeaders, 
-                    columns: colHeaders.map(() => ({ type: 'text' })),
-                    width: '100%',
-                    cells: function(row, col) {
-                        const cellProperties = {};
-                        // Pintar de verde ("#00b2a9") toda la fila si es un turno de Hora Extra
-                        if (this.instance.getDataAtCell(row, 7)) {
-                            if (cellProperties.renderer) {
-                            } else {
-                                cellProperties.renderer = customStylesRenderer;
-                            }
-                        }
-                        
-                        if (col === 0 || col === 1 || col === 2 || col === 4 || col === 7 || col === 10 || col === 11 || col === 12 || col === 13 ) {
-                            // Primero verificar si está ya se encuentra pintado de algún color
-                            if (cellProperties.renderer) {
-                            } else {
-                                cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
-                                    Handsontable.renderers.TextRenderer.apply(this, arguments);
-                                    if (row === 0) {
-                                        td.style.backgroundColor = '#DDF8FC';
-                                    } else {
-                                        const previousCell = instance.getCell(row - 1, 0);
-                                        if (previousCell) {
-                                            const previousCellColor = window.getComputedStyle(previousCell).backgroundColor;
-                                            if (instance.getDataAtCell(row, 0) == instance.getDataAtCell(row - 1, 0)) {
-                                                td.style.backgroundColor = previousCellColor;
-                                            } else {
-                                                td.style.backgroundColor = previousCellColor === 'rgb(221, 248, 252)' ? 'rgb(255, 255, 255)' : 'rgb(221, 248, 252)';
-                                            }
-                                        } else {
-                                            td.style.backgroundColor = 'rgb(255, 255, 255)';
-                                        }
-                                    }
-                                    td.style.color = 'black';
-                                };
-                            }
-                        }
-                        // Pintar de amarillo las celdas que no se pueden modificar
-                        if (col === 8 || col === 9) {
-                            if (cellProperties.renderer) {
-                            } else {
-                                cellProperties.renderer = function(instance, td, row, col, prop, value, cellProperties) {
-                                    Handsontable.renderers.TextRenderer.apply(this, arguments);
-                                    td.style.backgroundColor = '#fbffb6';
-                                    td.style.color = 'black';
-                                };
-                            }
-                        }
-                        // Hacer de solo lectura la celda de turno si es una Hora Extra
-                        if (col === 5) {
-                            if (this.instance.getDataAtCell(row, 7)) {
-                                cellProperties.readOnly = true;
-                            }
-                        }
-    
-                        return cellProperties;
-                    },
-                });
-
-                // Obtener los datos de turnos antes de inicializar Handsontable
-                Promise.all([cmbTurnos(), cmbAreas()]).then(([turnos, areas]) => {
-                    // Update Handsontable with the specific column settings
-                    hot.updateSettings({
-                        columns: [
-                            { type: 'text', readOnly: true },       // Colaborador
-                            { type: 'text', readOnly: true },       // Area Periodo
-                            { type: 'text', readOnly: true },       // Desempeño
-                            { type: 'text', readOnly: true },       // Id Horario Turno
-                            { type: 'text', readOnly: true },       // Fecha
-                            { 
-                                type: 'dropdown',
-                                source: turnos
-                            },                                      // Turno
-                            { 
-                                type: 'dropdown',
-                                source: areas
-                            },                                      // Área
-                            { type: 'text', readOnly: true },       // Horas Extra
-                            { type: 'text', readOnly: true },       // Hora de Entrada
-                            { type: 'text', readOnly: true },       // Hora de Salida
-                            { type: 'text', readOnly: false },      // Hora de Entrada
-                            { type: 'text', readOnly: false },      // Hora de Salida
-                            { 
-                                type: 'text', 
-                                readOnly: false,
-                            },                                      // Obs1
-                            {
-                                type: 'text', 
-                                readOnly: false,
-                            },                                      // Obs2
-                        ]
-                    });
-                });
-
-                msgAutoClose();
-            } else {
-                msgError(ErrorMensaje(datos), ()=>{}, ()=>{});
-            }
-        });
-    };
 
     // Cagar Tabla
     var cargarTabla = () => {
-        //msgLoad("Procesando...");
         return new Promise((resolve, reject) => {
-            // Crear un nuevo objeto FormData
-            var datos = new FormData(formPeriodo);
+            msgLoad("Procesando...");
+            var datos = new FormData();
             datos.append('usuario', $("#session_usuario_id").val());
             datos.append('usuario_rol', $("#session_rol_id").val());
             datos.append('periodo', $('[name="filtro-periodos"]').val());
+            datos.append('fecha', $('[name="filtro-fecha"]').val());
             datos.append('colaborador', $('[name="filtro-colaborador"]').val());
             datos.append('ocupacion', $('[name="filtro-ocupacion"]').val());
             datos.append('desempenio', $('[name="filtro-desempenio"]').val());
             datos.append('areaperiodo', $('[name="filtro-areaperiodo"]').val());
             datos.append('estado', $('[name="filtro-estado"]').val());
-            datos.append('fecha', '2024-05-01');
-            
+            datos.append('tipo_m', $('#op_manana').is(':checked') ? $('#op_manana').val() : '');
+            datos.append('tipo_t', $('#op_tarde').is(':checked') ? $('#op_tarde').val() : '');
+            datos.append('tipo_n', $('#op_noche').is(':checked') ? $('#op_noche').val() : '');
             
             fetch(`${environment.apiSRD}/API/julia/asistencia/diaria/listar-paginado`, {
                 method: 'POST',
                 body: datos
             })
             .then(response => response.json())
-                .then(datos => {
-                    if (datos.estado == 1) {
-                        const apiData = datos.data;
+            .then(datos => {
+                const noRecordsMessage = document.getElementById('noRecordsMessage');
+                const table = document.getElementById('HSTable');
+    
+                if (datos.estado == 1) {
+                    const apiData = datos.data;
+    
+                    if (apiData.length === 0) {
+                        table.style.display = 'none';
+                        noRecordsMessage.style.display = 'block';
+                    } else {
+                        table.style.display = 'block';
+                        noRecordsMessage.style.display = 'none';
+    
                         const colHeaders = Object.keys(apiData[0]);
                         const tableData = apiData.map(item => Object.values(item));
                         
@@ -298,7 +236,7 @@ var KTDiaria = function() {
                             columns: colHeaders.map(() => ({ type: 'text' })),
                             width: '100%'
                         });
-
+    
                         // Si es necesario actualizar las columnas con dropdowns
                         Promise.all([cmbTurnos(), cmbAreas()]).then(([turnos, areas]) => {
                             hot.updateSettings({
@@ -319,27 +257,29 @@ var KTDiaria = function() {
                                     { type: 'text', readOnly: true },   // Horas Extra
                                     { type: 'text', readOnly: true },   // Hora de Entrada
                                     { type: 'text', readOnly: true },   // Hora de Salida
-                                    { type: 'text', readOnly: false },   // Hora de Entrada
-                                    { type: 'text', readOnly: false },   // Hora de Salida
+                                    { type: 'text', readOnly: false },  // Hora de Entrada
+                                    { type: 'text', readOnly: false },  // Hora de Salida
                                     { 
                                         type: 'text', 
                                         readOnly: false,
-                                    },                                      // Obs1
+                                    },                                  // Obs1
                                     {
                                         type: 'text', 
                                         readOnly: false,
-                                    },                                      // Obs2
+                                    },                                  // Obs2
                                 ]
                             });
                             resolve(); // Resuelve la promesa si la tabla se cargó correctamente
                         });
-                    } else {
-                        msgError(ErrorMensaje(datos), ()=>{}, ()=>{});
                     }
-                })
-                .catch(error => {
-                    reject(error); // Rechaza la promesa si hay un error en el fetch
-                });
+                } else {
+                    msgError(ErrorMensaje(datos), ()=>{}, ()=>{});
+                }
+            })
+            .catch(error => {
+                reject(error); // Rechaza la promesa si hay un error en el fetch
+            });
+            msgAutoClose();
         });
     }
 
@@ -402,6 +342,202 @@ var KTDiaria = function() {
         hot.updateSettings({ height: windowHeight-300 });
     }
 
+    // Submit form handler
+    var handleSubmitPeriodo = () => {
+
+        // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
+        validator = FormValidation.formValidation(
+            formDiario,
+            {
+                fields: {
+                    'periodo': {
+                        validators: {
+                            notEmpty: {
+                                message: 'El periodo es requerido'
+                            }
+                        }
+                    },
+                    'fecha': {
+                        validators: {
+                            notEmpty: {
+                                message: 'La fecha es requerida'
+                            }
+                        }
+                    },
+                    'estado': {
+                        validators: {
+                            integer: {
+                                message: 'El estado debe ser un valor válido'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    trigger: new FormValidation.plugins.Trigger(),
+                    bootstrap: new FormValidation.plugins.Bootstrap5({
+                        rowSelector: '.fv-row',
+                        eleInvalidClass: '',
+                        eleValidClass: ''
+                    })
+                }
+            }
+        );
+
+        // Handle Enviar Modal Periodos
+        submitPeriodo.addEventListener('click', e => {
+            e.preventDefault();
+            // Validate form before submit
+            if (validator) {
+                validator.validate().then(function (status) {
+                    
+                    if (status == 'Valid') {
+                        msgLoad("Procesando...");
+                        submitPeriodo.setAttribute('data-kt-indicator', 'on');
+
+                        // Disable submit button whilst loading
+                        submitPeriodo.disabled = true;
+                        
+                        // Crear un nuevo objeto FormData
+                        var datos = new FormData(formDiario);
+                        datos.append('idapp', 'ENF_002');
+                        datos.append('usuario', $("#session_usuario_id").val());
+                        datos.append('usuario_rol', $("#session_rol_id").val());
+                        datos.append('periodo', $('[name="periodo"]').val());
+
+                        var apimode = document.getElementById('titulo_modal').innerText == 'Agregar Periodo' ? 'agregar' : 'editar';
+
+                        msgConfirm("¿Está seguro que desea guardar los datos?", () => {
+                            fetch(`${environment.apiSRD}/API/periodos/${apimode}-periodo`, {
+                                method: 'POST',
+                                body: datos
+                            }).then(Response => Response.json())
+                            .then(datos => {
+                                if (datos.estado == 1) {
+                                    
+                                    $('[name="id"]').val(null).trigger('change');
+                                    $('[name="periodo"]').val(null).trigger('change');
+                                    $('[name="fecha"]').val(null).trigger('change');
+                                    document.querySelector(`input[name="estado"][value="1"]`).checked = false;
+                                    document.querySelector(`input[name="estado"][value="0"]`).checked = false;
+                                    validator.resetForm(); // Reset formvalidation --- more info: https://formvalidation.io/guide/api/reset-form/
+                                    $('#kt_modal_agregar_periodos').modal('hide');
+
+                                    // Configurar el orden antes de la recarga
+                                    dt.order([5, 'desc']).page('first').draw(false);
+
+                                    // Usar una promesa para manejar la recarga
+                                    new Promise((resolve) => {
+                                        dt.ajax.reload(() => {
+                                            resolve(); // Resolver la promesa después de la recarga
+                                        }, false);
+                                    }).then(() => {
+                                        if (apimode == 'agregar') {
+                                            msgSuccess("Los cambios han sido guardados exitosamente");
+                                        } else {
+                                            msgSuccessMixin("Los cambios han sido guardados exitosamente","");
+                                        }
+                                    });
+                                    
+                                } else {
+                                    msgError(ErrorMensaje(datos), () => { datos.estado == 2 ? location.reload() : ''; }, () => {datos.estado == 2 ? location.reload() : ''; });
+                                }
+                            }).catch(error => {
+                                msgError('Error al procesar los datos: ' + error);
+                            }).finally(() => {
+                                submitPeriodo.setAttribute('data-kt-indicator', 'off');
+                                submitPeriodo.disabled = false;  // Habilitar botón después de procesar
+                            });
+                        }, () => {
+                            submitPeriodo.setAttribute('data-kt-indicator', 'off');
+                            submitPeriodo.disabled = false;
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Reset Filter
+    var handleSubmitFiltro = () => {
+        
+        var formFiltro = document.querySelector('#form_modal_filtro_diario');
+        var validator2;
+        
+        validator2 = FormValidation.formValidation(
+            formFiltro,
+            {
+                fields: {
+                    'filtro-periodo': {
+                        validators: {
+                            notEmpty: {
+                                message: 'El periodo es requerido'
+                            }
+                        }
+                    },
+                    'filtro-fecha': {
+                        validators: {
+                            notEmpty: {
+                                message: 'La fecha es requerida'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    trigger: new FormValidation.plugins.Trigger(),
+                    bootstrap: new FormValidation.plugins.Bootstrap5({
+                        rowSelector: '.fv-row',
+                        eleInvalidClass: '',
+                        eleValidClass: ''
+                    })
+                }
+            }
+        );
+
+        // Select filtrar button
+        const filtrarButton = document.querySelector('#kt_modal_filtro_diario_submit');
+    
+        // Reset datatable
+        filtrarButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (validator2) {
+                validator2.validate().then(function (status) {
+                    if (status == 'Valid') {
+                        // Cerrar el modal
+                        $('#kt_diario_filtro_modal').modal('hide');
+
+                        cargarTabla().then(() => {
+                            msgSuccessMixin("Los cambios se han aplicado exitosamente","");
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Limpiar Filtro de Asistencia Diaria
+    var handleLimpiarFiltro = () => {
+        // Select filtrar button
+        const limpiarButton = document.querySelector('#kt_modal_filtro_diario_limpiar');
+    
+        // Reset datatable
+        limpiarButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            $('[name="filtro-colaborador"]').val(null).trigger('change');
+            $('[name="filtro-ocupacion"]').val(null).trigger('change');
+            $('[name="filtro-desempenio"]').val(null).trigger('change');
+            $('[name="filtro-areaperiodo"]').val(null).trigger('change');
+            document.querySelector(`input[name="filtro-estado"][value="1"]`).checked = false;
+            document.querySelector(`input[name="filtro-estado"][value="0"]`).checked = false;
+            document.querySelector(`input[name="filtro-tipo"][value="M"]`).checked = false;
+            document.querySelector(`input[name="filtro-tipo"][value="N"]`).checked = false;
+            document.querySelector(`input[name="filtro-tipo"][value="T"]`).checked = false;
+            
+            cargarTabla().then(() => {
+                msgSuccessMixin("Los filtros se han limpiado exitosamente","");
+            });
+        });
+    }
+
     // Exportar en CSV
     var handleExportar = function() {
         const exportarButton = document.querySelector('#boton-exportar-horario');
@@ -411,31 +547,36 @@ var KTDiaria = function() {
             msgLoad("Procesando...");
             
             // Crear un nuevo objeto FormData
-            var datos = new FormData(formPeriodo);
+            var datos = new FormData(formDiario);
             datos.append('usuario', $("#session_usuario_id").val());
             datos.append('usuario_rol', $("#session_rol_id").val());
             datos.append('periodo', $('[name="filtro-periodos"]').val());
+            datos.append('fecha', $('[name="filtro-fecha"]').val());
             datos.append('colaborador', $('[name="filtro-colaborador"]').val());
             datos.append('ocupacion', $('[name="filtro-ocupacion"]').val());
             datos.append('desempenio', $('[name="filtro-desempenio"]').val());
             datos.append('areaperiodo', $('[name="filtro-areaperiodo"]').val());
             datos.append('estado', $('[name="filtro-estado"]').val());
+            datos.append('tipo', $('[name="filtro-tipo"]').val());
             
-            fetch(`${environment.apiSRD}/API/julia/horario/listar`, {
+            fetch(`${environment.apiSRD}/API/julia/asistencia/diaria/listar`, {
                 method: 'POST',
                 body: datos
+            }).then(response => {
+                if (response.ok) {
+                    return response.blob(); // Obtener la respuesta como un archivo Blob (CSV)
+                }
+                throw new Error('Error al generar el CSV');
             })
-            .then(response => response.text())
-            .then(text => {
-                // Crear un Blob en UTF-8 (el contenido ya debe incluir BOM desde el servidor)
-                const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+            .then(blob => {
+                // Crear un enlace de descarga
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'CE_Lista_horario.csv';
+                a.download = 'CE_Lista_Asistencia_Diaria.csv'; // Nombre del archivo a descargar
                 document.body.appendChild(a);
-                a.click();
-                a.remove();
+                a.click(); // Simular clic para descargar
+                a.remove(); // Eliminar el enlace después de descargar
             }).catch(error => {
                 msgError('Error al procesar los datos: ' + error, () => { }, () => { });
             }).finally(() => {
@@ -488,13 +629,16 @@ var KTDiaria = function() {
     // Public methods
     return {
         init: function() {
+            formDiario = document.getElementById('form_modal_filtro_diario');
+
             initComponentes().then(() => {
-                initDatatable1();
                 initTableSettings();
                 updateTableHeight();
                 modificarCelda();
                 handleActualizar();
                 handleExportar();
+                handleSubmitFiltro();
+                handleLimpiarFiltro();
             }).catch(error => {
                 console.error('Error durante la inicialización:', error);
             });
