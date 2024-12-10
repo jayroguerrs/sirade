@@ -143,9 +143,6 @@
 
             // VALIDAMOS EL ESTADO
             if ( $V_ESTADO === NULL || $V_ESTADO == '' ) {
-                $error = 'El estado es obligatorio';
-                $contador += 1;
-                $earray[$contador] = $error;
             } else {
                 if ( $V_ESTADO != 0 && $V_ESTADO != 1 ) {
                     $error = 'El estado es incorrecto';

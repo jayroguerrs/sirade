@@ -464,8 +464,10 @@ function AbrirModalServicio(id, modo) {
         document.getElementById('div-estado').style.display = 'none';
         document.getElementById('titulo_modal').innerText = 'Agregar Servicio';
 
+        $('#form_modal_agregar_servicio').find('input, select, textarea').prop('disabled', false);
+
         //Habilitar el campo de servicio
-        $('[name="servicio"]').prop('disabled', false);
+        
         $('#kt_modal_agregar_servicio_submit').show();
         msgAutoClose();
 
