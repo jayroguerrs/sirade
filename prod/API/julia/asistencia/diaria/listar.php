@@ -9,15 +9,17 @@
     
     // Obtener los valores enviados desde el frontend
     $V_ESTA = !isset($_POST["estado"]) ? null : ($_POST["estado"] === '0' ? '0' : ($_POST["estado"] == '' ? null : $_POST["estado"]));
-    $V_SERV = !isset($_POST["servicio"]) ? null : ($_POST["servicio"] == '' ? null : $_POST["servicio"]);
-    $V_SUPER = !isset($_POST["supervisor"]) ? null : ($_POST["supervisor"] == '' ? null : $_POST["supervisor"]);
-    $V_PERIODO = !isset($_POST["periodo"]) ? null : ($_POST["periodo"] == '' ? null : $_POST["periodo"]);
     $V_COLABORADOR = !isset($_POST["colaborador"]) ? null : ($_POST["colaborador"] == '' ? null : $_POST["colaborador"]);
     $V_OCUPACION = !isset($_POST["ocupacion"]) ? null : ($_POST["ocupacion"] == '' ? null : $_POST["ocupacion"]);
     $V_DESEMPEÑO = !isset($_POST["desempenio"]) ? null : ($_POST["desempenio"] == '' ? null : $_POST["desempenio"]);
     $V_AREAPERIODO = !isset($_POST["areaperiodo"]) ? null : ($_POST["areaperiodo"] == '' ? null : $_POST["areaperiodo"]);
+    $V_PERIODO = !isset($_POST["periodo"]) ? null : ($_POST["periodo"] == '' ? null : $_POST["periodo"]);
+    $V_FECHA = !isset($_POST["fecha"]) ? null : ($_POST["fecha"] == '' ? null : $_POST["fecha"]);
     $V_ID = !isset($_POST["usuario"]) ? null : ($_POST["usuario"] == '' ? null : $_POST["usuario"]);
     $V_ROL = !isset($_POST["usuario_rol"]) ? NULL : ($_POST["usuario_rol"] == '' ? NULL : $_POST["usuario_rol"]);
+    $V_TIPO_M = !isset($_POST["tipo_m"]) ? null : ($_POST["tipo_m"] == '' ? null : $_POST["tipo_m"]);
+    $V_TIPO_T = !isset($_POST["tipo_t"]) ? null : ($_POST["tipo_t"] == '' ? null : $_POST["tipo_t"]);
+    $V_TIPO_N = !isset($_POST["tipo_n"]) ? null : ($_POST["tipo_n"] == '' ? null : $_POST["tipo_n"]);
 
     try {
 
@@ -38,15 +40,15 @@
 
         // VALIDAMOS EL ID DEL SUPERVISOR
         if ( $V_ID === NULL || $V_ID == '' ) {
-            $error = 'El ID del supervisor es obligatorio';
+            $error = 'El ID del usuario es obligatorio';
             $contador += 1;
             $earray[$contador] = $error;
         } else {
             $stmt = $conn->prepare("SELECT A.NUSUA_ID, B.NROLE_ID 
-                                        FROM SRD_USUARIOS A
-                                        INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
-                                        WHERE A.NUSUA_ID = ? AND A.NAUDI_EST_REG = 1;");
-            $stmt->bind_param("i", $V_ID);
+                                    FROM SRD_USUARIOS A
+                                    INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
+                                    WHERE A.NUSUA_ID = ? AND B.NROLE_ID = ? AND A.NAUDI_EST_REG = 1;");
+            $stmt->bind_param("ii", $V_ID, $V_ROL);
             $stmt->execute();
             $stmt->store_result();
             if ($stmt->num_rows > 0) {
@@ -55,12 +57,14 @@
                 if ( $idusuario != $_SESSION['id'] ) {
                     $error = 'El usuario no puede realizar dicha operación';
                     $contador += 1;
+                    $est = 2;
                     $contadorsession += 1;
                     $earray[$contador] = $error;
                 }
                 if ( $idrol != $_SESSION['rol_id'] ) {
                     $error = 'El rol del usuario no corresponde a la operación';
                     $contador += 1;
+                    $est = 2;
                     $contadorsession += 1;
                     $earray[$contador] = $error;
                 }
@@ -95,6 +99,33 @@
                 $earray[$contador] = $error;
             }
             $stmt->close();
+        }
+
+        // VALIDAMOS LA FECHA, DEBE TENER FORMATO "YYYY-MM-DD" Y DEBE ESTAR DENTRO DEL RANGO DEL PERIODO
+        if ( $V_FECHA === NULL || $V_FECHA == '' ) {
+            $error = 'La fecha es obligatoria';
+            $contador += 1;
+            $earray[$contador] = $error;
+        } else {
+            if ( !preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $V_FECHA) ) {
+                $error = 'El formato de la fecha es incorrecto';
+                $contador += 1;
+                $earray[$contador] = $error;
+            } else {
+                $V_FECHA = date('Y-m-d', strtotime($V_FECHA));
+                $stmt = $conn->prepare("SELECT A.NPERI_ID FROM SRD_PERIODO A
+                                        WHERE A.NPERI_ID = ? AND A.DPERI_INICIO <= ? AND A.DPERI_FIN >= ? AND A.NPERI_ESTADO = 1 AND A.NAUDI_EST_REG = 1;");
+                $stmt->bind_param("iss", $V_PERIODO, $V_FECHA, $V_FECHA);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows > 0) {
+                } else {
+                    $error = 'La fecha no se encuentra dentro del rango del periodo';
+                    $contador += 1;
+                    $earray[$contador] = $error;
+                }
+                $stmt->close();
+            }
         }
 
         // VALIDAMOS EL ID DE OCUPACIÓN
@@ -147,128 +178,130 @@
 
         if ($contador == 0) {
             
-            $stmt = $conn->prepare("SELECT DPERI_INICIO, DPERI_FIN FROM SRD_PERIODO WHERE NPERI_ID = ? AND NAUDI_EST_REG = 1 AND NPERI_ESTADO = 1;");
-            $stmt->bind_param("i", $V_PERIODO);
-            $stmt->execute();
-            $stmt->store_result();
-            if ($stmt->num_rows > 0) {
-                $stmt->bind_result($periodo_ini, $periodo_fin);
-                $stmt->fetch();
+            $query = "SELECT
+                            sht.NHOTU_ID 'ID HORARIO',
+                            su.CUSUA_NOMBRES COLABORADOR,
+                            so.COCUP_DESCRIPCION 'OCUPACIÓN',
+                            sd.CDESE_DESCRIPCION 'DESEMPEÑO',
+                            ssap.CAREA_ID AS 'AREA PERIODO',
+                            sht.DHOTU_FECHA 'FECHA',
+                            IF(sht.NHOEX_ID IS NULL, sht.CTURN_ID, she.CTURN_ID) 'TURNO',
+                            sht.CTURN_TIPO 'TIPO TURNO',
+                            sht.CAREA_ID 'AREA',
+                            IF(sht.NHOEX_ID IS NULL, '', she.CHOEX_CODIGO) 'HORAS EXTRAS',
+                            CAST(
+                                IF(
+                                    sht.NHOEX_ID IS NULL,
+                                    IF(
+                                        st.TTURN_HORA_INICIO > st.TTURN_HORA_FIN, 
+                                        CONCAT(DATE_SUB(sht.DHOTU_FECHA, INTERVAL 1 DAY), ' ', st.TTURN_HORA_INICIO), 
+                                        CONCAT(sht.DHOTU_FECHA, ' ', st.TTURN_HORA_INICIO)
+                                    ),
+                                    she.DHOEX_FECHA_INICIAL
+                                ) AS DATETIME
+                            ) 'HORA DE ENTRADA',
+                            CAST(
+                                IF(
+                                    sht.NHOEX_ID IS NULL,
+                                    CONCAT(sht.DHOTU_FECHA, ' ', st.TTURN_HORA_FIN),
+                                    she.DHOEX_FECHA_FINAL
+                                ) AS DATETIME
+                            ) 'HORA DE SALIDA',
+                            sm.DMARC_MARCA_INICIO 'MARCACIÓN DE ENTRADA',
+                            sm.DMARC_MARCA_FIN 'MARCACIÓN DE SALIDA',
+                            sht.CHOTU_OBS_INICIAL 'OBSERVACIÓN ENTRADA',
+                            sht.CHOTU_OBS_FINAL 'OBSERVACIÓN SALIDA'
+                        FROM srd_horario sh
+                        LEFT JOIN srd_usuarios su ON sh.NUSUA_ID = su.NUSUA_ID AND su.NUSUA_ESTADO = 1 AND su.NAUDI_EST_REG = 1
+                        LEFT JOIN srd_super_areas_periodo ssap ON sh.NSAPE_ID = ssap.NSAPE_ID AND ssap.NSAPE_ESTADO = 1 AND ssap.NAUDI_EST_REG = 1
+                        -- LEFT JOIN srd_areas sa ON ssap.CAREA_ID = sa.CAREA_ID AND sa.NAUDI_EST_REG = 1 AND sa.NAREA_ESTADO = 1
+                        LEFT JOIN srd_desempenio sd ON sd.NDESE_ID = su.NDESE_ID AND sd.NAUDI_EST_REG = 1 AND sd.NDESE_ESTADO = 1
+                        LEFT JOIN srd_ocupacion so ON so.NOCUP_ID = su.NOCUP_ID AND so.NAUDI_EST_REG = 1 AND so.NOCUP_ESTADO = 1
+                        LEFT JOIN srd_horario_turnos sht ON sht.NHORA_ID = sh.NHORA_ID AND sht.NAUDI_EST_REG = 1 AND sht.NHOTU_ESTADO = 1
+                        LEFT JOIN srd_horas_extras she ON she.NHOEX_ID = sht.NHOEX_ID AND she.NHOEX_ESTADO = 1 AND she.NAUDI_EST_REG = 1
+                        LEFT JOIN srd_turno st ON st.CTURN_ID = sht.CTURN_ID AND st.NTURN_ESTADO = 1 AND st.NAUDI_EST_REG = 1
+                        LEFT JOIN srd_marcacion sm ON sm.NHOTU_ID = sht.NHOTU_ID AND sm.NMARC_ESTADO = 1 AND sm.NAUDI_EST_REG = 1
+                        WHERE ";
+            
+            //Filtros de Busqueda personalizados
+            if (!empty($V_PERIODO) && isset($V_PERIODO)) {
+                $query .= "ssap.NPERI_ID = " . $V_PERIODO . " AND ";
+            }
 
-                // Convert dates to DateTime objects for iteration
-                $start_date = new DateTime($periodo_ini);
-                $end_date = new DateTime($periodo_fin);
-                $end_date->modify('+1 day'); // Include end date in iteration
+            if (!empty($V_FECHA) && isset($V_FECHA)) {
+                $query .= "sht.DHOTU_FECHA = '" . $V_FECHA . "' AND ";
+            }
 
-                // Generate dynamic SQL parts for each day
-                $sql_parts = [];
-                $interval = new DateInterval('P1D');
-                $period = new DatePeriod($start_date, $interval, $end_date);
-                foreach ($period as $date) {
-                    $day = $date->format('Y-m-d');
-                    $sql_parts[] = "GROUP_CONCAT(CASE WHEN DHOTU_FECHA = '$day' THEN CTURN_ID ELSE NULL END ORDER BY CTURN_ID SEPARATOR '---') AS `$day`";
-                    $header_parts[] = "turnos.`$day`";
-                }
+            if (!empty($V_OCUPACION) && isset($V_OCUPACION)) {
+                $query .= "SO.NOCUP_ID = '" . $V_OCUPACION . "' AND ";
+            }
 
-                $sql_select_parts = implode(", ", $sql_parts);
-                $header_select_parts = implode(", ", $header_parts);
+            if (!empty($V_DESEMPEÑO) && isset($V_DESEMPEÑO)) {
+                $query .= "SD.NDESE_ID = '" . $V_DESEMPEÑO . "' AND ";
+            }
 
-                $query = "SELECT
-                                su.CUSUA_NOMBRES AS 'COLABORADOR',
-                                sa.CAREA_DESCRIPCION AS 'AREA PERIODO',
-                                so.COCUP_DESCRIPCION AS 'OCUPACIÓN',
-                                sd.CDESE_DESCRIPCION AS 'DESEMPEÑO',
-                                sh.NHORA_ID AS 'ID HORARIO',
-                                $header_select_parts,
-                                IFNULL(ROUND(SUM(turno_duracion.total_horas), 2), 0) AS 'HORAS TOTALES'
-                            FROM srd_horario sh
-                            LEFT JOIN srd_usuarios su ON sh.NUSUA_ID = su.NUSUA_ID AND su.NUSUA_ESTADO = 1 AND su.NAUDI_EST_REG = 1
-                            LEFT JOIN srd_super_areas_periodo ssap ON sh.NSAPE_ID = ssap.NSAPE_ID AND ssap.NSAPE_ESTADO = 1 AND ssap.NAUDI_EST_REG = 1
-                            LEFT JOIN srd_areas sa ON ssap.CAREA_ID = sa.CAREA_ID AND sa.NAUDI_EST_REG = 1 AND sa.NAREA_ESTADO = 1
-                            LEFT JOIN srd_desempenio sd ON sd.NDESE_ID = su.NDESE_ID AND sd.NAUDI_EST_REG = 1 AND sd.NDESE_ESTADO = 1
-                            LEFT JOIN srd_ocupacion so ON so.NOCUP_ID = su.NOCUP_ID AND so.NAUDI_EST_REG = 1 AND so.NOCUP_ESTADO = 1
-                            LEFT JOIN (
-                                SELECT
-                                    NHORA_ID,
-                                    $sql_select_parts
-                                FROM srd_horario_turnos
-                                WHERE NAUDI_EST_REG = 1 AND NHOTU_ESTADO = 1
-                                GROUP BY NHORA_ID
-                            ) AS turnos ON turnos.NHORA_ID = sh.NHORA_ID
-                            LEFT JOIN (
-                                SELECT 
-                                    sht.NHORA_ID,
-                                    SUM(TIMESTAMPDIFF(MINUTE, st.TTURN_HORA_INICIO, st.TTURN_HORA_FIN) / 60) AS total_horas
-                                FROM srd_horario_turnos sht
-                                LEFT JOIN srd_turno st ON sht.CTURN_ID = st.CTURN_ID
-                                WHERE sht.NAUDI_EST_REG = 1 AND sht.NHOTU_ESTADO = 1
-                                GROUP BY sht.NHORA_ID
-                            ) AS turno_duracion ON turno_duracion.NHORA_ID = sh.NHORA_ID
-                            WHERE  ";
-                
-                //Filtros de Busqueda personalizados
-                if (!empty($V_OCUPACION) && isset($V_OCUPACION)) {
-                    $query .= "SO.NOCUP_ID = '" . $V_OCUPACION . "' AND ";
-                }
+            if (!empty($V_AREAPERIODO) && isset($V_AREAPERIODO)) {
+                $query .= "SA.CAREA_ID = '" . $V_AREAPERIODO . "' AND ";
+            } 
+    
+            if (!empty($V_COLABORADOR) && isset($V_COLABORADOR)) {
+                $query .= "SU.CUSUA_NOMBRES LIKE '%" . $V_COLABORADOR . "%' AND ";
+            }
 
-                if (!empty($V_DESEMPEÑO) && isset($V_DESEMPEÑO)) {
-                    $query .= "SD.NDESE_ID = '" . $V_DESEMPEÑO . "' AND ";
-                }
+            // Filtros de tipo de turno
+            $tipoTurnoConditions = [];
+            if (!empty($V_TIPO_M) && isset($V_TIPO_M)) {
+                $tipoTurnoConditions[] = "ST.CTURN_TIPO LIKE '%" . $V_TIPO_M . "%'";
+            }
 
-                if (!empty($V_AREAPERIODO) && isset($V_AREAPERIODO)) {
-                    $query .= "SA.CAREA_ID = '" . $V_AREAPERIODO . "' AND ";
-                } 
-        
-                if (!empty($V_COLABORADOR) && isset($V_COLABORADOR)) {
-                    $query .= "SU.CUSUA_NOMBRES LIKE '%" . $V_COLABORADOR . "%' AND ";
-                }
+            if (!empty($V_TIPO_T) && isset($V_TIPO_T)) {
+                $tipoTurnoConditions[] = "ST.CTURN_TIPO LIKE '%" . $V_TIPO_T . "%'";
+            }
 
-                $query .= "SH.NHORA_ESTADO = 1 AND SH.NAUDI_EST_REG = 1 
-                            GROUP BY su.CUSUA_NOMBRES, sa.CAREA_DESCRIPCION, so.COCUP_DESCRIPCION, sd.CDESE_DESCRIPCION, sh.NHORA_ID
-                            ORDER BY su.CUSUA_NOMBRES; ";
+            if (!empty($V_TIPO_N) && isset($V_TIPO_N)) {
+                $tipoTurnoConditions[] = "ST.CTURN_TIPO LIKE '%" . $V_TIPO_N . "%'";
+            }
 
-               // Ejecutar la consulta
-                $result = $conn->query($query);
-
-                // Verificar si hay resultados
-                if ($result->num_rows > 0) {
-                    // Abrir la salida CSV
-                    $output = fopen('php://output', 'w');
-                    fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-                    
-                    // Obtener los nombres de las columnas
-                    $columnas = $result->fetch_fields();
-                    $encabezados = [];
-                    foreach ($columnas as $columna) {
-                        $encabezados[] = $columna->name;
-                    }
-        
-                    // Escribir cabecera del CSV
-                    fputcsv($output, $encabezados);
-        
-                    // Escribir filas del resultado en el CSV
-                    while ($row = $result->fetch_assoc()) {
-                        fputcsv($output, $row);
-                    }
-        
-                    // Cerrar el archivo CSV
-                    fclose($output);
-                } else {
-                    echo 'No hay datos disponibles para exportar.';
-                }
-        
-                // Cerrar la conexión
-                $conn->close();
-                exit();
+            if (!empty($tipoTurnoConditions)) {
+                $query .= " (" . implode(" OR ", $tipoTurnoConditions) . ") AND ";
+            }
+            //Fin Filtros de Busqueda personalizados
 
 
-            } else {
-                // Crear un archivo CSV con los errores
+            $query .= " SH.NHORA_ESTADO = 1 AND SH.NAUDI_EST_REG = 1 
+                        ORDER BY su.CUSUA_NOMBRES, st.TTURN_HORA_INICIO ; ";
+
+            // Ejecutar la consulta
+            $result = $conn->query($query);
+
+            // Verificar si hay resultados
+            if ($result->num_rows > 0) {
+                // Abrir la salida CSV
                 $output = fopen('php://output', 'w');
                 fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-                fputcsv($output, $earray);
+                
+                // Obtener los nombres de las columnas
+                $columnas = $result->fetch_fields();
+                $encabezados = [];
+                foreach ($columnas as $columna) {
+                    $encabezados[] = $columna->name;
+                }
+    
+                // Escribir cabecera del CSV
+                fputcsv($output, $encabezados);
+    
+                // Escribir filas del resultado en el CSV
+                while ($row = $result->fetch_assoc()) {
+                    //$row['CÓDIGO'] = '="' . $row['CÓDIGO'] . '"';
+                    if (!empty(array_filter($row))) { // Verifica que la fila no esté vacía
+                        fputcsv($output, $row);
+                    }
+                }
+    
+                // Cerrar el archivo CSV
                 fclose($output);
-                exit();
+            } else {
+                echo 'No hay datos disponibles para exportar.';
             }
     
             // Cerrar la conexión

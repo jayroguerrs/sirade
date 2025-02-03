@@ -10,19 +10,14 @@
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // VALOR DE LAS ENTRADAS
-        $V_KEY = !isset($_POST["id"]) ? NULL : ($_POST["id"] == '' ? NULL : $_POST["id"]);
-        $V_SERV = !isset($_POST["servicio"]) ? null : ($_POST["servicio"] == '' ? null : $_POST["servicio"]);
-        $V_DESC = !isset($_POST["descripcion"]) ? null : ($_POST["descripcion"] == '' ? null : $_POST["descripcion"]);
-        $V_MODO = isset($_POST['modo']) ? trim($_POST['modo']) : '' ;
-        $V_ESTADO = !isset($_POST["estado"]) ? NULL : ($_POST["estado"] == '' ? NULL : $_POST["estado"]);
-        $V_ROL = !isset($_POST["usuario_rol"]) ? NULL : ($_POST["usuario_rol"] == '' ? NULL : $_POST["usuario_rol"]);
         $V_ID = isset($_POST['usuario']) ? trim($_POST['usuario']) : '' ;
+        $V_ROL = !isset($_POST["usuario_rol"]) ? NULL : ($_POST["usuario_rol"] == '' ? NULL : $_POST["usuario_rol"]);
+        $V_KEY = !isset($_POST["id"]) ? NULL : ($_POST["id"] == '' ? NULL : $_POST["id"]);
 
         try {
             
             $contador = 0;
             session_start();
-            $est = 0;
             $erray = array();
             $contadorsession = 0;
 
@@ -79,98 +74,39 @@
                 $stmt->close();
             }
             
-            // VALIDAMOS EL ID QUE NO SEA NUMÉRICO
-            if ( is_numeric($V_KEY) ) {
-                $error = 'El key no es válido';
+            // VALIDAMOS EL KEY
+            if ( $V_KEY === NULL || $V_KEY == '' ) {
+                $error = 'El ID es obligatorio';
                 $contador += 1;
                 $earray[$contador] = $error;
             } else {
-                if ( $V_MODO == 'editar' ) {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_ID = ? AND NAUDI_EST_REG = 1;");
-                    $stmt->bind_param("s", $V_KEY);
-                    $stmt->execute();
-                    $stmt->store_result();
-                    if ($stmt->num_rows == 0) {
-                        $error = 'El key no se encuentra registrado';
-                        $contador += 1;
-                        $earray[$contador] = $error;
-                    }
-                    $stmt->close();
+                $stmt = $conn->prepare("SELECT CTURN_ID FROM SRD_TURNO WHERE CTURN_ID = ? AND NAUDI_EST_REG = 1;");
+                $stmt->bind_param("i", $V_KEY);
+                $stmt->execute();
+                $stmt->store_result();
+                if ($stmt->num_rows > 0) {
                 } else {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_ID = ? AND NAUDI_EST_REG = 1;");
-                    $stmt->bind_param("s", $V_KEY);
-                    $stmt->execute();
-                    $stmt->store_result();
-                    if ($stmt->num_rows > 0) {
-                        $error = 'El key ya se encuentra registrado';
-                        $contador += 1;
-                        $earray[$contador] = $error;
-                    }
-                    $stmt->close();
-                }
-            }
-
-            // VALIDAMOS LA DESCRIPCIÓN
-            if ( $V_DESC === NULL || $V_DESC == '' ) {
-                $error = 'La descripción es obligatoria';
-                $contador += 1;
-                $earray[$contador] = $error;
-            } else {
-                if ( $V_MODO == 'editar' ) {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_DESCRIPCION = ? AND CAREA_ID <> ? AND NAUDI_EST_REG = 1;");
-                    $stmt->bind_param("si", $V_DESC, $V_KEY);
-                    $stmt->execute();
-                    $stmt->store_result();
-                    if ($stmt->num_rows > 0) {
-                        $error = 'La descripción ya se encuentra registrada';
-                        $contador += 1;
-                        $earray[$contador] = $error;
-                    }
-                    $stmt->close();
-                } else {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_DESCRIPCION = ? AND NAUDI_EST_REG = 1;");
-                    $stmt->bind_param("s", $V_DESC);
-                    $stmt->execute();
-                    $stmt->store_result();
-                    if ($stmt->num_rows > 0) {
-                        $error = 'La descripción ya se encuentra registrada';
-                        $contador += 1;
-                        $earray[$contador] = $error;
-                    }
-                    $stmt->close();
-                }
-            }
-
-            // VALIDAMOS EL ESTADO
-            if ( $V_ESTADO === NULL || $V_ESTADO == '' ) {
-            } else {
-                if ( $V_ESTADO != 0 && $V_ESTADO != 1 ) {
-                    $error = 'El estado es incorrecto';
+                    $error = 'El key no se encuentra registrado';
                     $contador += 1;
                     $earray[$contador] = $error;
                 }
+                $stmt->close();
             }
 
             if ($contador == 0) {
                 
-                if ( $V_MODO == 'agregar' ) {
-                    $stmt = $conn->prepare("INSERT INTO SRD_AREAS (CAREA_ID, CAREA_DESCRIPCION, NAREA_ESTADO, DAUDI_REG_INS, NAUDI_REG_INS) VALUES (?, ?, ?, NOW(), ?);");
-                    $stmt->bind_param("ssis", $V_SERV, $V_DESC, $V_ESTADO, $V_ID);
-                    $stmt->execute();
-                } else {
-                    $stmt = $conn->prepare("UPDATE SRD_AREAS 
-                                            SET CAREA_ID = ?, CAREA_DESCRIPCION = ?, NAREA_ESTADO = ?, DAUDI_REG_UPD = NOW(), NAUDI_REG_UPD = ? 
-                                            WHERE CAREA_ID = ? AND NAUDI_EST_REG = 1;");
-                                                    
-                    $stmt->bind_param("ssiis", $V_SERV, $V_DESC, $V_ESTADO, $V_ID, $V_KEY);
-                    $stmt->execute();
-                }
+                $stmt = $conn->prepare("UPDATE SRD_TURNO
+                                        SET NAUDI_EST_REG = 0, DAUDI_REG_UPD = CURRENT_TIMESTAMP(), NAUDI_REG_UPD = ?
+                                        WHERE CTURN_ID = ?;");
+                                                
+                $stmt->bind_param("ii", $V_ID, $V_KEY);
+                $stmt->execute();
 
                 // Verifica si se realizaron cambios
-                if (mysqli_affected_rows($conn) > 0) {
+                if ($stmt->affected_rows > 0) {
                     $respuesta = array(
                         'estado' => 1,
-                        'mensaje' => '¡Se realizó la actualización exitosamente!',
+                        'mensaje' => '¡Se eliminó el registro exitosamente!',
                         'data' => array(
                             'id' => $V_ID
                         )
@@ -190,7 +126,7 @@
 
             } else {
                 $respuesta = array(
-                    'estado' => $est,
+                    'estado' => 0,
                     'mensaje' => '¡Error!',
                     'data' => $earray
                 );

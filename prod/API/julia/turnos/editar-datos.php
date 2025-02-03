@@ -11,8 +11,11 @@
 
         // VALOR DE LAS ENTRADAS
         $V_KEY = !isset($_POST["id"]) ? NULL : ($_POST["id"] == '' ? NULL : $_POST["id"]);
-        $V_SERV = !isset($_POST["servicio"]) ? null : ($_POST["servicio"] == '' ? null : $_POST["servicio"]);
+        $V_TURNO = !isset($_POST["turno"]) ? null : ($_POST["turno"] == '' ? null : $_POST["turno"]);
         $V_DESC = !isset($_POST["descripcion"]) ? null : ($_POST["descripcion"] == '' ? null : $_POST["descripcion"]);
+        $V_TIPO = !isset($_POST["tipo"]) ? null : ($_POST["tipo"] == '' ? null : $_POST["tipo"]);
+        $V_INICIO = !isset($_POST["inicio"]) ? null : ($_POST["inicio"] == '' ? null : $_POST["inicio"]);
+        $V_FIN = !isset($_POST["fin"]) ? null : ($_POST["fin"] == '' ? null : $_POST["fin"]);
         $V_MODO = isset($_POST['modo']) ? trim($_POST['modo']) : '' ;
         $V_ESTADO = !isset($_POST["estado"]) ? NULL : ($_POST["estado"] == '' ? NULL : $_POST["estado"]);
         $V_ROL = !isset($_POST["usuario_rol"]) ? NULL : ($_POST["usuario_rol"] == '' ? NULL : $_POST["usuario_rol"]);
@@ -86,7 +89,7 @@
                 $earray[$contador] = $error;
             } else {
                 if ( $V_MODO == 'editar' ) {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_ID = ? AND NAUDI_EST_REG = 1;");
+                    $stmt = $conn->prepare("SELECT CTURN_ID FROM SRD_TURNO WHERE CTURN_ID = ? AND NAUDI_EST_REG = 1;");
                     $stmt->bind_param("s", $V_KEY);
                     $stmt->execute();
                     $stmt->store_result();
@@ -97,7 +100,7 @@
                     }
                     $stmt->close();
                 } else {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_ID = ? AND NAUDI_EST_REG = 1;");
+                    $stmt = $conn->prepare("SELECT CTURN_ID FROM SRD_TURNO WHERE CTURN_ID = ? AND NAUDI_EST_REG = 1;");
                     $stmt->bind_param("s", $V_KEY);
                     $stmt->execute();
                     $stmt->store_result();
@@ -117,7 +120,7 @@
                 $earray[$contador] = $error;
             } else {
                 if ( $V_MODO == 'editar' ) {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_DESCRIPCION = ? AND CAREA_ID <> ? AND NAUDI_EST_REG = 1;");
+                    $stmt = $conn->prepare("SELECT CTURN_ID FROM SRD_TURNO WHERE CTURN_DESCRIPCION = ? AND CTURN_ID <> ? AND NAUDI_EST_REG = 1;");
                     $stmt->bind_param("si", $V_DESC, $V_KEY);
                     $stmt->execute();
                     $stmt->store_result();
@@ -128,7 +131,7 @@
                     }
                     $stmt->close();
                 } else {
-                    $stmt = $conn->prepare("SELECT CAREA_ID FROM SRD_AREAS WHERE CAREA_DESCRIPCION = ? AND NAUDI_EST_REG = 1;");
+                    $stmt = $conn->prepare("SELECT CTURN_ID FROM SRD_TURNO WHERE CTURN_DESCRIPCION = ? AND NAUDI_EST_REG = 1;");
                     $stmt->bind_param("s", $V_DESC);
                     $stmt->execute();
                     $stmt->store_result();
@@ -141,8 +144,37 @@
                 }
             }
 
+            // VALIDAMOS EL TIPO, TIENE QUE SER MÁXIMO 3 CARACTERES Y TIENEN QUE SER "M" O "N" O "T" O TENER ALGUNA DE SUS COMBINACIONES
+            if ($V_TIPO === NULL || $V_TIPO == '') {
+                $error = 'El tipo es obligatorio';
+                $contador += 1;
+                $earray[$contador] = $error;
+            } else {
+                if (strlen($V_TIPO) > 3) {
+                    $error = 'El tipo es incorrecto';
+                    $contador += 1;
+                    $earray[$contador] = $error;
+                } else {
+                    if (!preg_match('/^[MNT]{1,3}$/', $V_TIPO)) {
+                        $error = 'El tipo es incorrecto';
+                        $contador += 1;
+                        $earray[$contador] = $error;
+                    } else {
+                        // Verificar que todos los caracteres sean diferentes
+                        if (count(array_unique(str_split($V_TIPO))) != strlen($V_TIPO)) {
+                            $error = 'El tipo debe contener caracteres únicos';
+                            $contador += 1;
+                            $earray[$contador] = $error;
+                        }
+                    }
+                }
+            }
+
             // VALIDAMOS EL ESTADO
             if ( $V_ESTADO === NULL || $V_ESTADO == '' ) {
+                $error = 'El estado es obligatorio';
+                $contador += 1;
+                $earray[$contador] = $error;
             } else {
                 if ( $V_ESTADO != 0 && $V_ESTADO != 1 ) {
                     $error = 'El estado es incorrecto';
@@ -154,15 +186,15 @@
             if ($contador == 0) {
                 
                 if ( $V_MODO == 'agregar' ) {
-                    $stmt = $conn->prepare("INSERT INTO SRD_AREAS (CAREA_ID, CAREA_DESCRIPCION, NAREA_ESTADO, DAUDI_REG_INS, NAUDI_REG_INS) VALUES (?, ?, ?, NOW(), ?);");
-                    $stmt->bind_param("ssis", $V_SERV, $V_DESC, $V_ESTADO, $V_ID);
+                    $stmt = $conn->prepare("INSERT INTO SRD_TURNO (CTURN_ID, CTURN_DESCRIPCION, NTURN_ESTADO, DAUDI_REG_INS, NAUDI_REG_INS) VALUES (?, ?, ?, NOW(), ?);");
+                    $stmt->bind_param("ssis", $V_TURNO, $V_DESC, $V_ESTADO, $V_ID);
                     $stmt->execute();
                 } else {
-                    $stmt = $conn->prepare("UPDATE SRD_AREAS 
-                                            SET CAREA_ID = ?, CAREA_DESCRIPCION = ?, NAREA_ESTADO = ?, DAUDI_REG_UPD = NOW(), NAUDI_REG_UPD = ? 
-                                            WHERE CAREA_ID = ? AND NAUDI_EST_REG = 1;");
+                    $stmt = $conn->prepare("UPDATE SRD_TURNO 
+                                            SET CTURN_ID = ?, CTURN_DESCRIPCION = ?, NTURN_ESTADO = ?, DAUDI_REG_UPD = NOW(), NAUDI_REG_UPD = ? 
+                                            WHERE CTURN_ID = ? AND NAUDI_EST_REG = 1;");
                                                     
-                    $stmt->bind_param("ssiis", $V_SERV, $V_DESC, $V_ESTADO, $V_ID, $V_KEY);
+                    $stmt->bind_param("ssiis", $V_TURNO, $V_DESC, $V_ESTADO, $V_ID, $V_KEY);
                     $stmt->execute();
                 }
 

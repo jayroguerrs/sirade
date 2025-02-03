@@ -134,12 +134,12 @@
                 }
 
                 if($result->num_rows > 0) {
-                   $respuesta = array(
-                       'estado' => 1,
-                       'mensaje' => '¡Ingreso Exitoso!',
-                       'total' => $result->num_rows,
-                       'data' => $data
-                   );
+                    $respuesta = array(
+                        'estado' => 1,
+                        'mensaje' => '¡Ingreso Exitoso!',
+                        'total' => $result->num_rows,
+                        'data' => $data
+                    );
                 } else {
                     $respuesta = array(
                         'estado' => 0,

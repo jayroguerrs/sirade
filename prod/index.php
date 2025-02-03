@@ -12,7 +12,6 @@
         <meta property="og:locale" content="en_US" />
         <meta property="og:type" content="article" />
         <meta property="og:title" content="" />
-        <meta property="og:url" content="https://themes.getbootstrap.com/product/good-bootstrap-5-admin-dashboard-template"/>
         <meta property="og:site_name" content="Hay un dron en mi sopa | Julia" />
         <link rel="canonical" href="https://hayundronenmisopa.com/julia"/>
         <link rel="shortcut icon" href="admin/assets/media/logos/favicon.png">
@@ -65,11 +64,21 @@
         </div>
     
         <!-- Add your site or application content here -->
-        <script src="admin/assets/js/custom/jquery-3.4.1.min.js"></script>
-        <script src="admin/assets/js/custom/owl.carousel.min.js"></script>
-        <script src="admin/assets/js/custom/all.min.js"></script>
-        <!-- select2-bootstrap4-theme -->
-        <script src="admin/assets/js/custom/main.js"></script>
+        <script src="admin/assets/plugins/global/plugins.bundle.js"></script>
+        <script src="admin/assets/plugins/global/owl.carousel.min.js"></script>
+        <script>
+            $('.owl-carousel').owlCarousel({
+            center: true,
+            nav:true,
+            margin:30,
+            stagePadding:30,
+            loop:true,
+            autoWidth:true,
+            autoplay:true,
+            autoplayTimeout:4000,
+            items:3
+        })
+        </script>
     </body>
 </html>
 
