@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 Author: JAYRO GUERREROS ECHIA
-Product Name: CENTRUM ALUMNI - SISTEMA DE GESTIÓN DE DATOS ALUMNI CENTRUM PUCP PERÚ
+Product Name: SIRADE - SISTEMA DE REGISTRO ADMINISTRATIVO DE LA DIRECCIÓN DE ENFERMERÍA
 Contact: jayroguerreros@gmail.com
 Follow: www.instagram.com/jayroguerrs
 Dribbble: www.dribbble.com/keenthemes
 Like: www.facebook.com/jayroguerreros
-License: Todos los derechos CENTRUM ALUMNI PUCP.
+License: Todos los derechos CLÍNICA RICARDO PALMA.
 -->
 <html lang="en" >
     <!--begin::Head-->
     <head><base href=""/>
-        <title></title>
+        <title>SIRADE | Julia</title>
         <meta charset="utf-8"/>
         <meta name="description" content="<?php echo $row['CAPLI_MARCA'] ;?>, <?php echo $row['CAPLI_DESCRIPCION'] ;?>"/>
         <meta name="keywords" content="Asistencias, control, gestión, clínicas, médicos, enfermería, hospital, clínicas"/>
@@ -19,15 +19,14 @@ License: Todos los derechos CENTRUM ALUMNI PUCP.
         <meta property="og:locale" content="en_US" />
         <meta property="og:type" content="article" />
         <meta property="og:title" content="<?php echo $row['CAPLI_MARCA'] ;?>, <?php echo $row['CAPLI_DESCRIPCION'] ;?>" />
-        <meta property="og:url" content="https://themes.getbootstrap.com/product/good-bootstrap-5-admin-dashboard-template"/>
         <meta property="og:site_name" content="Hay un dron en mi sopa | Julia" />
         <link rel="canonical" href="https://hayundronenmisopa.com/julia"/>
         <link rel="shortcut icon" href="assets/media/logos/favicon.png"/>
         <!--begin::Fonts-->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"/>        <!--end::Fonts-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"/>
+        <!--end::Fonts-->
         <!--begin::Vendor Stylesheets(used by this page)-->
         <link href="assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css"/>
-        <link href="assets/plugins/custom/vis-timeline/vis-timeline.bundle.css" rel="stylesheet" type="text/css"/>
         <!--end::Vendor Stylesheets-->
         <!--begin::Global Stylesheets Bundle(used by all pages)-->
         <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
@@ -54,16 +53,11 @@ License: Todos los derechos CENTRUM ALUMNI PUCP.
         <!--end::Global Javascript Bundle-->
         <!--begin::Vendors Javascript(used by this page)-->
         <script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
-        <script src="assets/plugins/custom/vis-timeline/vis-timeline.bundle.js"></script>
         <!--end::Vendors Javascript-->
         <!--begin::Custom Javascript(used by this page)-->
-
-        <script src="assets/js/widgets.bundle.js"></script>
-        <script src="assets/js/custom/widgets.js"></script>
         <script src="<?php echo $archivo ;?>.model.js" type="module"></script>
         <!--end::Custom Javascript-->
         <script src="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.js"></script>
-
     <!--end::Javascript-->
     </body>
     <!--end::Body-->

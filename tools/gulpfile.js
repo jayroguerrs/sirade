@@ -27,9 +27,14 @@ gulp.task('html', () => {
     return gulp.src('../dev/**/*.php')
       .pipe(htmlmin({ collapseWhitespace: true }))
       .pipe(gulp.dest('../prod/'));
-  });
+});
 
-gulp.task('default', parallel('css', 'img', 'js'));
+gulp.task('copy-php', () => {
+    return gulp.src('../dev/**/*.php')
+      .pipe(gulp.dest('../prod/'));
+});
+
+gulp.task('default', parallel('css', 'img', 'js', 'copy-php'));
 
 gulp.task('watch', function () {    
     gulp.watch('../dev/admin/assets/css/*.css', parallel('css'));

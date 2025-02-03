@@ -12,7 +12,6 @@
         <meta property="og:locale" content="en_US" />
         <meta property="og:type" content="article" />
         <meta property="og:title" content="" />
-        <meta property="og:url" content="https://themes.getbootstrap.com/product/good-bootstrap-5-admin-dashboard-template"/>
         <meta property="og:site_name" content="Hay un dron en mi sopa | Julia" />
         <link rel="canonical" href="https://hayundronenmisopa.com/julia"/>
         <link rel="shortcut icon" href="admin/assets/media/logos/favicon.png">
