@@ -48,28 +48,7 @@ var KTPersonalList = function() {
             continuarButton.disabled = true;
         }
     });
-
-    var formDataDisponibles = function() {
-        return {
-            periodo: $("[name='periodo']").val(),
-            estado: 1,
-            desempenio: $("[name='desempenio']").val(),
-            usuario: $("#session_usuario_id").val(),
-            usuario_rol: $("#session_rol_id").val(),
-        };
-    };
-
-    var formDataAsignados = function() {
-        return {
-            periodo: $("[name='periodo']").val(),
-            estado: 1,
-            servicio: $("[name='servicio']").val(),
-            usuario: $("#session_usuario_id").val(),
-            usuario_rol: $("#session_rol_id").val(),
-        };
-    };
   
-
     // Private functions
     var initDatatable1 = function() {
         
@@ -91,107 +70,123 @@ var KTPersonalList = function() {
             ajax: {
                 type: "POST",
                 url: `${environment.apiSRD}/API/jci/personal/lista-disponible`,
-                data: function(data){
-                    $.extend(data, formDataDisponibles());
+                data: function(d){
+                    var datos = ObtenerDatosDisponibles();
+                    d.periodo = datos.periodo;
+                    d.desempenio = datos.desempenio;
+                    d.estado = datos.estado;
+                    d.usuario = $("#session_usuario_id").val();
+                    d.usuario_rol = $("#session_rol_id").val();
                 },
             },
+            columns: [
+                { data: 0, name: 'NUSUA_ID' },
+                { data: 1, name: 'CUSUA_CODIGO' },
+                { data: 2, name: 'CUSUA_NOMBRES' },
+                { data: 3, name: 'CUSUA_IMG' },
+                { data: 4, name: 'CNACI_DESCRIPCION' },
+                { data: 5, name: 'CNACI_IMAGEN' },
+                { data: 6, name: 'CAREA_ID' },
+                { data: 7, name: 'CDESE_DESCRIPCION' },
+                { data: null, name: 'acciones'},
+            ],
             columnDefs: [
-                { targets: 0, visible: false,                //ID Usuario
-                  render: function (data, type, row) {                    
-                    return `                        
-                      <span class="fw-bold fs-6">${data}</span>                      
-                    `
-                  }
+                { targets: 0, visible: false,                       //ID Usuario
+                    render: function (data, type, row) {                    
+                        return `                        
+                            <span class="fw-bold fs-6">${data}</span>                      
+                        `
+                    }
                 },
                 { targets: 1, visible: false },                 //Codigo Usuario
                 { targets: 2, visible: true,                    //Nombres Colaborador
-                  className: 'd-flex align-items-center',
-                  render: function (data, type, row) {
-                    var user_img = row[3];
-                    if (user_img != 'blank.png') {
-                      // For Avatar image
-                      var $output = '<div class=symbol-label><img src="assets/media/avatars/' + user_img + '" alt="Avatar" class="w-100"></div>';
-                    } else {
-                      // For Avatar badge
-                      var stateNum = Math.floor(Math.random() * 6);
-                      var states = ['success', 'danger', 'warning', 'info', 'dark', 'primary', 'secondary'];
-                      var $state = states[stateNum],
-                      
-                      $initials = data.match(/\b\w/g) || [];
-                      $initials = (($initials.shift() || '') + ($initials.pop() || '')).toUpperCase();
-                      $output = '<div class="symbol-label fs-3 bg-light-' + $state + ' text-' + $state + '">' + $initials + '</div>';
-                    }
-                    return `                        
-                      <!--begin:: Avatar -->
-                      <div class="symbol symbol-circle symbol-50px overflow-hidden me-3">
-                        <span">${$output}</span>
-                      </div>
-                      <!--end::Avatar-->
-
-                      <!--begin::User details-->
-                      <div class="d-flex flex-column" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start" data-kt-menu-overflow="true">
-                        <span class="fw-bold fs-7">${data}</span>
-                      </div>
-                      <!--end::User details-->
-                      <!--begin::Menu 3-->
-                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-auto py-3" data-kt-menu="true">
-                            <!--begin::Title-->
-                            <div class="menu-item px-3">
-                                <div class="menu-content d-flex align-items-center px-3">
-                                    <!--begin::Username-->
-                                    <div class="d-flex flex-column">
-                                        <div class="fw-bold d-flex align-items-center fs-5">
-                                            Detalles Adicionales
-                                        </div>
-                                    </div>
-                                    <!--end::Username-->
-                                </div>
-                            </div>
-                            <!--end::Title-->
-
-                            <!--begin::Menu separator-->
-                            <div class="separator my-2"></div>
-                            <!--end::Menu separator-->
-
-                            <div class="d-flex flex-wrap p-5">    
-                                <!--begin::Row-->
-                                <div class="flex-equal me-5">
-                                    <!--begin::Details-->
-                                    <table class="table fs-6 fw-semibold gs-0 gy-2 gx-2 m-0">
-                                        <!--begin::Row-->
-                                        <tr>
-                                            <td class="text-gray-500 min-w-175px w-175px">Código:</td>
-                                            <td class="text-gray-800 min-w-175px">
-                                                <span>${row[1]}</span>
-                                            </td>
-                                        </tr>
-                                        <!--end::Row-->
-                                        <!--begin::Row-->
-                                        <tr>
-                                            <td class="text-gray-500">Nacionalidad:</td>
-                                            <td class="text-gray-800">
-                                                <img src="assets/media/flags/${row[5]}" class="me-3" style="width: 20px;border-radius: 4px" alt=""/>
-                                                <span>${row[4]}</span>
-                                            </td>
-                                        </tr>
-                                        <!--end::Row-->
-                                        <!--begin::Row-->
-                                        <tr>
-                                            <td class="text-gray-500">Desempeño:</td>
-                                            <td class="text-gray-800">
-                                                <span>${row[7]}</span>
-                                            </td>
-                                        </tr>
-                                        <!--end::Row-->
-                                    </table>
-                                    <!--end::Details-->
-                                </div>
-                                <!--end::Row-->
-                            </div>
+                    className: 'd-flex align-items-center',
+                    render: function (data, type, row) {
+                        var user_img = row[3];
+                        if (user_img != 'blank.png') {
+                        // For Avatar image
+                        var $output = '<div class=symbol-label><img src="assets/media/avatars/' + user_img + '" alt="Avatar" class="w-100"></div>';
+                        } else {
+                        // For Avatar badge
+                        var stateNum = Math.floor(Math.random() * 6);
+                        var states = ['success', 'danger', 'warning', 'info', 'dark', 'primary', 'secondary'];
+                        var $state = states[stateNum],
+                        
+                        $initials = data.match(/\b\w/g) || [];
+                        $initials = (($initials.shift() || '') + ($initials.pop() || '')).toUpperCase();
+                        $output = '<div class="symbol-label fs-3 bg-light-' + $state + ' text-' + $state + '">' + $initials + '</div>';
+                        }
+                        return `                        
+                        <!--begin:: Avatar -->
+                        <div class="symbol symbol-circle symbol-50px overflow-hidden me-3">
+                            <span">${$output}</span>
                         </div>
-                        <!--end::Menu 3-->
-                    `
-                  }
+                        <!--end::Avatar-->
+
+                        <!--begin::User details-->
+                        <div class="d-flex flex-column" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start" data-kt-menu-overflow="true">
+                            <span class="fw-bold fs-7">${data}</span>
+                        </div>
+                        <!--end::User details-->
+                        <!--begin::Menu 3-->
+                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-auto py-3" data-kt-menu="true">
+                                <!--begin::Title-->
+                                <div class="menu-item px-3">
+                                    <div class="menu-content d-flex align-items-center px-3">
+                                        <!--begin::Username-->
+                                        <div class="d-flex flex-column">
+                                            <div class="fw-bold d-flex align-items-center fs-5">
+                                                Detalles Adicionales
+                                            </div>
+                                        </div>
+                                        <!--end::Username-->
+                                    </div>
+                                </div>
+                                <!--end::Title-->
+
+                                <!--begin::Menu separator-->
+                                <div class="separator my-2"></div>
+                                <!--end::Menu separator-->
+
+                                <div class="d-flex flex-wrap p-5">    
+                                    <!--begin::Row-->
+                                    <div class="flex-equal me-5">
+                                        <!--begin::Details-->
+                                        <table class="table fs-6 fw-semibold gs-0 gy-2 gx-2 m-0">
+                                            <!--begin::Row-->
+                                            <tr>
+                                                <td class="text-gray-500 min-w-175px w-175px">Código:</td>
+                                                <td class="text-gray-800 min-w-175px">
+                                                    <span>${row[1]}</span>
+                                                </td>
+                                            </tr>
+                                            <!--end::Row-->
+                                            <!--begin::Row-->
+                                            <tr>
+                                                <td class="text-gray-500">Nacionalidad:</td>
+                                                <td class="text-gray-800">
+                                                    <img src="assets/media/flags/${row[5]}" class="me-3" style="width: 20px;border-radius: 4px" alt=""/>
+                                                    <span>${row[4]}</span>
+                                                </td>
+                                            </tr>
+                                            <!--end::Row-->
+                                            <!--begin::Row-->
+                                            <tr>
+                                                <td class="text-gray-500">Desempeño:</td>
+                                                <td class="text-gray-800">
+                                                    <span>${row[7]}</span>
+                                                </td>
+                                            </tr>
+                                            <!--end::Row-->
+                                        </table>
+                                        <!--end::Details-->
+                                    </div>
+                                    <!--end::Row-->
+                                </div>
+                            </div>
+                            <!--end::Menu 3-->
+                        `
+                    }
                 },
                 { targets: 3, visible: false,                   // Imagen
                   render: function (data, type, row) {
@@ -204,7 +199,7 @@ var KTPersonalList = function() {
                 { targets: 5, visible: false },                 // Imagen Nacionalidad
                 { targets: 6, visible: false },                 // Servicio
                 { targets: 7, visible: false },                 // Desempeño
-                { targets: -1, visible: true,                   //Acciones
+                { targets: 8, visible: true,                   //Acciones
                     data: null,
                     orderable: false,
                     className: 'text-end',
@@ -254,12 +249,31 @@ var KTPersonalList = function() {
             ajax: {
                 type: "POST",
                 url: `${environment.apiSRD}/API/jci/personal/lista-asignado`,
-                data: function(data){
-                    $.extend(data, formDataAsignados());
+                data: function(d){
+                    var datos = ObtenerDatosAsignados();
+                    d.periodo = datos.periodo;
+                    d.servicio = datos.servicio;
+                    d.estado = datos.estado;
+                    d.usuario = $("#session_usuario_id").val();
+                    d.usuario_rol = $("#session_rol_id").val();
                 },
             },
+            columns: [
+                { data: null, name: 'acciones'},
+                { data: 0, name: 'NUSUA_ID' },
+                { data: 1, name: 'NJENC_ID' },
+                { data: 2, name: 'CUSUA_CODIGO' },
+                { data: 3, name: 'CUSUA_NOMBRES' },
+                { data: 4, name: 'CUSUA_IMG' },
+                { data: 5, name: 'CNACI_DESCRIPCION' },
+                { data: 6, name: 'CNACI_IMAGEN' },
+                { data: 7, name: 'CAREA_ID' },
+                { data: 8, name: 'SUPERVISOR' },
+                { data: 9, name: 'CDESE_DESCRIPCION' },
+            ],
             columnDefs: [
-                { targets: 0, visible: true,                   // Key
+                { targets: 0, visible: false },                 //Acciones
+                { targets: 1, visible: true,                   // Key
                     data: null,
                     orderable: false,
                     className: 'text-start',
@@ -274,9 +288,9 @@ var KTPersonalList = function() {
                     `;
                     },
                 },
-                { targets: 1, visible: false },                 // ID Encuesta
-                { targets: 2, visible: false },                 // Codigo Usuario
-                { targets: 3, visible: true,                    // Nombres Colaborador
+                { targets: 2, visible: false },                 // ID Encuesta
+                { targets: 3, visible: false },                 // Codigo Usuario
+                { targets: 4, visible: true,                    // Nombres Colaborador
                   className: 'd-flex align-items-center',
                   render: function (data, type, row) {
                     var user_img = row[4];
@@ -373,18 +387,18 @@ var KTPersonalList = function() {
                     `
                   }
                 },
-                { targets: 4, visible: false,                   // Imagen
+                { targets: 5, visible: false,                   // Imagen
                   render: function (data, type, row) {
                     return `
                       <div class="badge badge-light-${(data == 'ACTIVO' ? 'success' : 'danger')} fw-bold">${(data)}</div>
                     `
                   },
                 },
-                { targets: 5, visible: false },                 // Nacionalidad
-                { targets: 6, visible: false },                 // Imagen Nacionalidad
-                { targets: 7, visible: false },                 // Servicio
-                { targets: 8, visible: false },                 // Supervisor
-                { targets: 9, visible: false },                 // Desempeño
+                { targets: 6, visible: false },                 // Nacionalidad
+                { targets: 7, visible: false },                 // Imagen Nacionalidad
+                { targets: 8, visible: false },                 // Servicio
+                { targets: 9, visible: false },                 // Supervisor
+                { targets: 10, visible: false },                 // Desempeño
                 { targets: -1, visible: true,                   //Acciones
                     data: null,
                     orderable: false,
@@ -582,28 +596,12 @@ var KTPersonalList = function() {
                     continuarButton.setAttribute('data-kt-indicator', 'off');
                     // Disable submit button whilst loading
                     // Marcar los radio buttons con los valores devueltos por la API
-                    Swal.fire({
-                        toast: true,
-                        position: "top-end",
-                        icon: "success",
-                        title: "Verificación exitosa, puede continuar",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
+                    msgSuccessMixin("Verificación exitosa, puede continuar","");
                     document.getElementById('div-asignar').classList.remove('d-none');
                     $("[name='periodo']").prop('disabled', true);
                 }, 500);
             } else {
-                Swal.fire({
-                    toast: true,
-                    position: "top-end",
-                    icon: "warning",
-                    title: "Hay campos obligatorios pendientes de completar",
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
+                msgWarningMixin("Hay campos obligatorios pendientes de completar","");
             }
         })
     }
@@ -645,7 +643,7 @@ function asignar(colaborador, periodo) {
     formData.append('usuario_rol', $("#session_rol_id").val());
     formData.append('colaborador', colaborador);
     formData.append('periodo', periodo);
-    formData.append('servicio', $("[name='servicio']").val());
+    formData.append('servicio', $("[name='filtro-servicio-asig']").val());
 
     fetch(`${environment.apiSRD}/API/jci/personal/agregar-asignacion`, {
         method: 'POST',
@@ -653,26 +651,9 @@ function asignar(colaborador, periodo) {
     }).then(Response => Response.json())
     .then(datos => {
         if (datos.estado == 1) {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "success",
-                title: "Los cambios han sido guardados exitosamente",
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-            });
-                
+            msgSuccessMixin("Los cambios se han guardado exitosamente","");
         } else {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "warning",
-                title: datos.data['1'],
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-            });
+            msgWarningMixin(datos.mensaje,"");
         }
         $("#colab_disponibles").DataTable().ajax.reload();
         $("#colab_asignados").DataTable().ajax.reload();
@@ -694,30 +675,37 @@ function quitar(encuesta) {
     }).then(Response => Response.json())
     .then(datos => {
         if (datos.estado == 1) {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "success",
-                title: "Los cambios han sido guardados exitosamente",
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-            });
-                
+            msgSuccessMixin("Los cambios se han guardado exitosamente","");
         } else {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "warning",
-                title: datos.data['1'],
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-            });
+            msgWarningMixin(datos.mensaje,"");
         }
+        
         $("#colab_disponibles").DataTable().ajax.reload();
         $("#colab_asignados").DataTable().ajax.reload();
     });
 };
 
 window.quitar = quitar;
+
+function ObtenerDatosDisponibles(){
+    var datos = new Array();
+    datos['periodo'] = $("[name='filtro-periodo-disp']").val();
+    datos['desempenio'] = $("[name='filtro-desempenio-disp']").val();
+    datos['estado'] = 1;
+    datos['usuario'] = $("#session_usuario_id").val();
+    datos['usuario_rol'] = $("#session_rol_id").val();
+
+    return datos;
+}
+
+function ObtenerDatosAsignados(){
+    
+    var datos = new Array();
+    datos['periodo'] = $("[name='periodo']").val();
+    datos['servicio'] = $("[name='filtro-servicio-asig']").val();
+    datos['estado'] = 1;
+    datos['usuario'] = $("#session_usuario_id").val();
+    datos['usuario_rol'] = $("#session_rol_id").val();
+
+    return datos;
+}

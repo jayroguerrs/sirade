@@ -38,19 +38,19 @@
                                         <option></option>
                                         <?php
                                             $sql = "SELECT DISTINCT 
-                                                        A.NJPER_ID,
+                                                        A.NPERI_ID,
                                                         B.CJPER_DESCRIPCION
                                                     FROM SRD_JCI_ENCUESTAS A
-                                                    INNER JOIN SRD_JCI_PERIODO B ON A.NJPER_ID = B.NJPER_ID
+                                                    INNER JOIN srd_periodo B ON A.NPERI_ID = B.NPERI_ID
                                                     INNER JOIN SRD_JCI_AREAS_SUPER C ON C.CAREA_ID = A.CAREA_ID 
                                                     WHERE C.NUSUA_ID = 1 AND 
                                                         A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1 
-                                                    GROUP BY B.DJPER_FIN DESC;";
+                                                    GROUP BY B.DPERI_FIN DESC;";
                                             $result = $conn->query($sql);
                                             if ($result->num_rows > 0) {
                                                 // output data of each row
                                                 while($row = $result->fetch_assoc()) { ?>
-                                                    <option value="<?php echo $row["NJPER_ID"]; ?>"><?php echo $row["CJPER_DESCRIPCION"]; ?></option> <?php
+                                                    <option value="<?php echo $row["NPERI_ID"]; ?>"><?php echo $row["CJPER_DESCRIPCION"]; ?></option> <?php
                                                 }
                                             }
                                         ?>

@@ -27,9 +27,9 @@
                 $earray[$contador] = $error;
             } else {
                 $stmt = $conn->prepare("SELECT DISTINCT 
-                                            A.NJPER_ID
+                                            A.NPERI_ID
                                         FROM SRD_JCI_ENCUESTAS A
-                                        INNER JOIN SRD_JCI_PERIODO B ON A.NJPER_ID = B.NJPER_ID
+                                        INNER JOIN srd_periodo B ON A.NPERI_ID = B.NPERI_ID
                                         INNER JOIN SRD_JCI_AREAS_SUPER C ON C.CAREA_ID = A.CAREA_ID 
                                         WHERE C.NUSUA_ID = ? AND 
                                             A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1;");
@@ -56,7 +56,7 @@
                                         FROM SRD_JCI_ENCUESTAS A
                                         INNER JOIN SRD_JCI_AREAS_SUPER B ON A.CAREA_ID = B.CAREA_ID
                                         INNER JOIN SRD_AREAS C ON C.CAREA_ID = B.CAREA_ID 
-                                        WHERE B.NUSUA_ID = ? AND A.NJPER_ID = ? AND 
+                                        WHERE B.NUSUA_ID = ? AND A.NPERI_ID = ? AND 
                                             A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1;");
                 $stmt->bind_param("is", $V_SUPER, $V_PERIO);
                 $stmt->execute();
@@ -100,7 +100,7 @@
                                         FROM SRD_JCI_ENCUESTAS A
                                         INNER JOIN SRD_JCI_AREAS_SUPER B ON A.CAREA_ID = B.CAREA_ID
                                         INNER JOIN SRD_USUARIOS C ON C.NUSUA_ID = A.NUSUA_ID
-                                        WHERE B.NUSUA_ID = ? AND A.NJPER_ID = ? AND A.CAREA_ID = ? AND A.NJENC_ID = ? AND
+                                        WHERE B.NUSUA_ID = ? AND A.NPERI_ID = ? AND A.CAREA_ID = ? AND A.NJENC_ID = ? AND
                                             A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1;");
                 $stmt->bind_param("issi", $V_SUPER, $V_PERIO, $V_SERVI, $V_ENCUE);
                 $stmt->execute();

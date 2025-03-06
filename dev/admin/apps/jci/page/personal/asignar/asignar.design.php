@@ -37,20 +37,20 @@
                                             data-placeholder="Seleccione un periodo" data-allow-clear="true">
                                         <option></option>
                                         <?php
-                                            $sql = "SELECT DISTINCT 
-                                                        A.NJPER_ID,
-                                                        B.CJPER_DESCRIPCION
+                                            $sql = "SELECT  
+                                                        A.NPERI_ID,
+                                                        B.CPERI_DESCRIPCION
                                                     FROM SRD_JCI_ENCUESTAS A
-                                                    INNER JOIN SRD_JCI_PERIODO B ON A.NJPER_ID = B.NJPER_ID
+                                                    INNER JOIN srd_periodo B ON A.NPERI_ID = B.NPERI_ID
                                                     INNER JOIN SRD_JCI_AREAS_SUPER C ON C.CAREA_ID = A.CAREA_ID 
-                                                    WHERE C.NUSUA_ID = 1 AND 
+                                                    WHERE C.NUSUA_ID = " . $_SESSION['id'] . " AND 
                                                         A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1 
-                                                    GROUP BY B.DJPER_FIN DESC;";
+                                                    GROUP BY A.NPERI_ID ORDER BY B.DPERI_FIN DESC;";
                                             $result = $conn->query($sql);
                                             if ($result->num_rows > 0) {
                                                 // output data of each row
                                                 while($row = $result->fetch_assoc()) { ?>
-                                                    <option value="<?php echo $row["NJPER_ID"]; ?>"><?php echo $row["CJPER_DESCRIPCION"]; ?></option> <?php
+                                                    <option value="<?php echo $row["NPERI_ID"]; ?>"><?php echo $row["CPERI_DESCRIPCION"]; ?></option> <?php
                                                 }
                                             }
                                         ?>
@@ -128,7 +128,7 @@
                             <div class="col-md-5 mb-6 fv-row">
                                 <!--begin::Input-->
                                 <!--begin::Select2-->
-                                <select class="form-select form-select-solid" name="desempenio" data-control="select2" data-hide-search="true" data-placeholder="Desempeño" data-allow-clear="true">
+                                <select class="form-select form-select-solid" name="filtro-desempenio-disp" data-control="select2" data-hide-search="true" data-placeholder="Desempeño" data-allow-clear="true">
                                     <option></option>
                                     <?php
                                         $sql = "SELECT 
@@ -247,7 +247,7 @@
                             <div class="col-md-5 mb-6 fv-row">
                                 <!--begin::Input-->
                                 <!--begin::Select2-->
-                                <select class="form-select form-select-solid" name="servicio" data-control="select2" data-hide-search="false" data-placeholder="Servicio" data-allow-clear="true">
+                                <select class="form-select form-select-solid" name="filtro-servicio-asig" data-control="select2" data-hide-search="false" data-placeholder="Servicio" data-allow-clear="true">
                                     <option></option>
                                     <?php
                                         $sql = "SELECT 
@@ -292,6 +292,7 @@
                                 <thead>
                                     <tr class="text-gray-400 fw-bold fs-8 text-uppercase gs-0">
                                         <th class="text-start min-w-80px">Acciones</th>
+                                        <th>Key Usuario</th>
                                         <th>Key Encuesta</th>
                                         <th>Código</th>
                                         <th class="text-end">Colaborador</th>

@@ -26,14 +26,17 @@
             session_start();
             $contadorsession = 0;
 
-            // VALIDAMOS EL ID DEL SUPERVISOR
+            // VALIDAMOS EL ID DEL USUARIO
             if ( $V_ID === NULL || $V_ID == '' ) {
-                $error = 'El ID del supervisor es obligatorio';
+                $error = 'El ID del usuario es obligatorio';
                 $contador += 1;
                 $earray[$contador] = $error;
             } else {
-                $stmt = $conn->prepare("SELECT NUSUA_ID, NROLE_ID FROM SRD_USUARIOS WHERE NUSUA_ID = ? AND NAUDI_EST_REG = 1;");
-                $stmt->bind_param("i", $V_ID);
+                $stmt = $conn->prepare("SELECT A.NUSUA_ID, B.NROLE_ID 
+                                        FROM SRD_USUARIOS A
+                                        INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
+                                        WHERE A.NUSUA_ID = ? AND B.NROLE_ID = ? AND A.NAUDI_EST_REG = 1;");
+                $stmt->bind_param("ii", $V_ID, $V_ROL);
                 $stmt->execute();
                 $stmt->store_result();
                 if ($stmt->num_rows > 0) {
@@ -42,12 +45,14 @@
                     if ( $idusuario != $_SESSION['id'] ) {
                         $error = 'El usuario no puede realizar dicha operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
                     if ( $idrol != $_SESSION['rol_id'] ) {
                         $error = 'El rol del usuario no corresponde a la operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
@@ -65,31 +70,12 @@
             }
 
             if ($contador == 0) {
-                $column = array(
-                    'NJENC_ID',
-                    'NUSUA_ID',
-                    'CUSUA_IMG',
-                    'CUSUA_NOMBRES',
-                    'CUSUA_CORREO',
-                    'CAREA_ID',
-                    'CNACI_DESCRIPCION',
-                    'CNACI_IMAGEN',
-                    'NJPER_ID',
-                    'AVANCE',
-                    'PUNTAJE',
-                    'PUNTAJE_MAX',
-                    'NOTA_PORC',
-                    'PREG_CONTESTADAS',
-                    'TOTAL_PREGUNTAS',
-                    'ESTADO',
-                    'FEC_MODIFICACION',
-                    'USR_MODIFICACION'
-                );
+                
                 $query = "SELECT * FROM (
                             SELECT
                                 NJENC_ID,
                                 NUSUA_ID,
-                                NJPER_ID,
+                                NPERI_ID,
                                 CUSUA_NOMBRES,
                                 CUSUA_CORREO,
                                 CAREA_ID,
@@ -109,7 +95,7 @@
                                 SELECT
                                     A.NJENPR_ID,
                                     A.NJENC_ID,
-                                    B.NJPER_ID,
+                                    B.NPERI_ID,
                                     B.NUSUA_ID,
                                     C.CUSUA_NOMBRES,
                                     C.CUSUA_CORREO,
@@ -119,10 +105,12 @@
                                     G.CNACI_IMAGEN,
                                     D.NJRESP_VALOR AS NOTA,
                                     IF(D.NJRESP_VALOR IS NULL, NULL, MAX(F.NJRESP_VALOR)) AS NOTA_MAXIMA,
-                                    FN_OBTENER_NOMBRE_ESTADO(B.NJENC_ESTADO) ESTADO,
-                                    IFNULL(B.DAUDI_REG_UPD, B.DAUDI_REG_INS) FEC_MODIFICACION,
-                                    FN_OBTENER_NOMBRE_POR_ID(IFNULL(B.NAUDI_REG_UPD, B.NAUDI_REG_INS)) USR_MODIFICACION
+                                    Z.CCADE_NOMBRE ESTADO,
+                                    IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
+                                    CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                                 FROM SRD_JCI_ENCUESTAS_PREG A
+                                LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NJENPR_ESTADO
+                                LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
                                 RIGHT JOIN SRD_JCI_ENCUESTAS B ON B.NJENC_ID = A.NJENC_ID
                                 INNER JOIN SRD_USUARIOS C ON B.NUSUA_ID = C.NUSUA_ID
                                 INNER JOIN SRD_NACIONALIDAD G ON G.NNACI_ID = C.NNACI_ID
@@ -149,7 +137,7 @@
                 }
         
                 if (!empty($V_PERI) && isset($V_PERI)) {
-                    $query .= "B.NJPER_ID = '" . $V_PERI . "' AND ";
+                    $query .= "B.NPERI_ID = '" . $V_PERI . "' AND ";
                 }
         
                 if (!empty($V_ESTA) && isset($V_ESTA)) {
@@ -163,7 +151,7 @@
         
                 if (isset($_POST["search"]["value"])) {
                     $query .= '(C.CUSUA_NOMBRES LIKE "%' . $_POST["search"]["value"] . '%" ';    
-                    $query .= 'OR B.NJPER_ID LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= 'OR B.NPERI_ID LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
         
                 $query .= "     GROUP BY A.NJENC_ID, E.NJPRE_ID
@@ -173,7 +161,7 @@
                             SELECT 
                                 A.NJENC_ID,
                                 A.NUSUA_ID,
-                                A.NJPER_ID,
+                                A.NPERI_ID,
                                 B.CUSUA_NOMBRES,
                                 B.CUSUA_CORREO,
                                 A.CAREA_ID,
@@ -186,10 +174,12 @@
                                 '0' PREG_CONTESTADAS,
                                 (SELECT COUNT(*) FROM SRD_JCI_PREGUNTAS) TOTAL_PREGUNTAS,
                                 '0' AVANCE,
-                                FN_OBTENER_NOMBRE_ESTADO(A.NJENC_ESTADO) ESTADO,
+                                Z.CCADE_NOMBRE ESTADO,
                                 IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
-                                FN_OBTENER_NOMBRE_POR_ID(IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS)) USR_MODIFICACION
+                                CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                             FROM SRD_JCI_ENCUESTAS A
+                            LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NJENC_ESTADO
+                            LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
                             INNER JOIN SRD_USUARIOS B ON A.NUSUA_ID = B.NUSUA_ID
                             LEFT JOIN SRD_JCI_ENCUESTAS_PREG C ON A.NJENC_ID = C.NJENC_ID
                             LEFT JOIN SRD_JCI_RESPUESTAS D ON C.NJRESP_ID = D.NJRESP_ID
@@ -214,7 +204,7 @@
                 }
 
                 if (!empty($V_PERI) && isset($V_PERI)) {
-                    $query .= "A.NJPER_ID = '" . $V_PERI . "' AND ";
+                    $query .= "A.NPERI_ID = '" . $V_PERI . "' AND ";
                 }
         
                 if (!empty($V_ESTA) && isset($V_ESTA) || $V_ESTA == '0') {
@@ -227,7 +217,7 @@
         
                 if (isset($_POST["search"]["value"])) {
                     $query .= '(B.CUSUA_NOMBRES LIKE "%' . $_POST["search"]["value"] . '%" ';    
-                    $query .= 'OR A.NJPER_ID LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= 'OR A.NPERI_ID LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
         
                 $query .= " ) DATOS ";
@@ -243,7 +233,8 @@
                 if ($_POST["length"] != -1) {
                     $query1 .= 'LIMIT ' . $_POST['start'] . ', ' . $_POST['length'];
                 }
-        
+                
+                echo $query;
                 $result = $conn->query($query);
                 $number_filter_row = $result->num_rows;
         
@@ -260,7 +251,7 @@
                     $sub_array[] = $row["CAREA_ID"];                                                    //[5]
                     $sub_array[] = $row["CNACI_DESCRIPCION"];                                           //[6]
                     $sub_array[] = $row["CNACI_IMAGEN"];                                                //[7]
-                    $sub_array[] = $row["NJPER_ID"];                                                    //[8]
+                    $sub_array[] = $row["NPERI_ID"];                                                    //[8]
                     $sub_array[] = $row["AVANCE"];                                                      //[9]
                     $sub_array[] = $row["PUNTAJE"];                                                     //[10]
                     $sub_array[] = $row["PUNTAJE_MAX"];                                                 //[11]
@@ -286,7 +277,7 @@
                     }
             
                     if (!empty($V_PERI) && isset($V_PERI)) {
-                        $query .= " AND NJPER_ID = '" . $V_PERI . "'";
+                        $query .= " AND NPERI_ID = '" . $V_PERI . "'";
                     }
         
                     $result = $connect->query($query);

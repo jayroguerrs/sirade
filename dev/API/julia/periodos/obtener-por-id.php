@@ -27,7 +27,7 @@
                 $contador += 1;
                 $earray[$contador] = $error;
             } else {
-                $stmt = $conn->prepare("SELECT NJPER_ID FROM SRD_JCI_PERIODO WHERE NJPER_ID = ? AND NAUDI_EST_REG = 1;");
+                $stmt = $conn->prepare("SELECT NPERI_ID FROM SRD_PERIODO WHERE NPERI_ID = ? AND NAUDI_EST_REG = 1;");
                 $stmt->bind_param("s", $V_KEY);
                 $stmt->execute();
                 $stmt->store_result();
@@ -81,13 +81,13 @@
             if ($contador == 0) {
                 
                 $stmt = $conn->prepare("SELECT
-                                            A.NJPER_ID,
+                                            A.NPERI_ID,
                                             A.CJPER_DESCRIPCION,
-                                            A.DJPER_INICIO,
-                                            A.DJPER_FIN,
-                                            A.NJPER_ESTADO
-                                        FROM SRD_JCI_PERIODO A
-                                        WHERE A.NAUDI_EST_REG = 1 AND A.NJPER_ID = ?;");
+                                            A.DPERI_INICIO,
+                                            A.DPERI_FIN,
+                                            A.NPERI_ESTADO
+                                        FROM SRD_PERIODO A
+                                        WHERE A.NAUDI_EST_REG = 1 AND A.NPERI_ID = ?;");
                                                 
                 $stmt->bind_param("s", $V_KEY );
                 $stmt->execute();

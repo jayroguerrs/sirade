@@ -80,15 +80,15 @@
             if ($contador == 0) {
                 
                 $query = " SELECT
-                                A.NJPER_ID,
+                                A.NPERI_ID,
                                 B.CJPER_DESCRIPCION,
-                                B.DJPER_INICIO,
-                                B.DJPER_FIN,
-                                FN_OBTENER_NOMBRE_ESTADO(B.NJPER_ESTADO) ESTADO,
+                                B.DPERI_INICIO,
+                                B.DPERI_FIN,
+                                FN_OBTENER_NOMBRE_ESTADO(B.NPERI_ESTADO) ESTADO,
                                 IFNULL(B.DAUDI_REG_UPD, B.DAUDI_REG_INS) FEC_MODIFICACION,
                                 FN_OBTENER_NOMBRE_POR_ID(IFNULL(B.NAUDI_REG_UPD, B.NAUDI_REG_INS)) USR_MODIFICACION
                             FROM SRD_JCI_ENCUESTAS A
-                            INNER JOIN SRD_JCI_PERIODO B ON A.NJPER_ID = B.NJPER_ID
+                            INNER JOIN srd_periodo B ON A.NPERI_ID = B.NPERI_ID
                             INNER JOIN SRD_JCI_AREAS_SUPER C ON A.CAREA_ID = C.CAREA_ID
                             WHERE ";
                 
@@ -98,27 +98,27 @@
                 }
 
                 if (!empty($V_PERI) && isset($V_PERI)) {
-                    $query .= "A.NJPER_ID = " . $V_PERI . " AND ";
+                    $query .= "A.NPERI_ID = " . $V_PERI . " AND ";
                 }
 
                 if (!empty($fecha_inicio) && isset($fecha_inicio)) {
-                    $query .= "B.DJPER_INICIO >= '" . $fecha_inicio . "' AND ";
+                    $query .= "B.DPERI_INICIO >= '" . $fecha_inicio . "' AND ";
                 }
 
                 if (!empty($fecha_fin) && isset($fecha_fin)) {
-                    $query .= "B.DJPER_INICIO <= '" . $fecha_fin . "' AND ";
+                    $query .= "B.DPERI_INICIO <= '" . $fecha_fin . "' AND ";
                 }
         
                 if (!empty($V_ESTA) && isset($V_ESTA) || $V_ESTA == '0') {
-                    $query .= "B.NJPER_ESTADO = " . $V_ESTA . " AND ";
+                    $query .= "B.NPERI_ESTADO = " . $V_ESTA . " AND ";
                 }
                 //Fin Filtros de Busqueda personalizados
         
                 $query .= " A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND ";
                 
                 if (isset($_POST["search"]["value"])) {
-                    $query .= '(A.NJPER_ID LIKE "%' . $_POST["search"]["value"] . '%" ';    
-                    $query .= 'OR FN_OBTENER_NOMBRE_ESTADO(B.NJPER_ESTADO) LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= '(A.NPERI_ID LIKE "%' . $_POST["search"]["value"] . '%" ';    
+                    $query .= 'OR FN_OBTENER_NOMBRE_ESTADO(B.NPERI_ESTADO) LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
                 
                 $query .= " GROUP BY B.CJPER_DESCRIPCION  ";
@@ -126,7 +126,7 @@
                 if (isset($_POST["order"])) {
                     $query .= 'ORDER BY ' . $_POST['columns'][$_POST['order']['0']['column']]['name'] . ' ' . $_POST['order']['0']['dir'] . ' ';
                 } else {
-                    $query .= 'ORDER BY B.DJPER_FIN DESC ';
+                    $query .= 'ORDER BY B.DPERI_FIN DESC ';
                 }
                 $query1 = '';
                 if ($_POST["length"] != -1) {
@@ -141,10 +141,10 @@
             
                 while($row = $result->fetch_assoc()) {
                     $sub_array = array();
-                    $sub_array[] = $row["NJPER_ID"];                                                    //[0]
+                    $sub_array[] = $row["NPERI_ID"];                                                    //[0]
                     $sub_array[] = $row["CJPER_DESCRIPCION"];                                           //[1]
-                    $sub_array[] = date_format(date_create($row["DJPER_INICIO"]), "d/m/Y");             //[2]
-                    $sub_array[] = date_format(date_create($row["DJPER_FIN"]), "d/m/Y");                //[3]
+                    $sub_array[] = date_format(date_create($row["DPERI_INICIO"]), "d/m/Y");             //[2]
+                    $sub_array[] = date_format(date_create($row["DPERI_FIN"]), "d/m/Y");                //[3]
                     $sub_array[] = $row["ESTADO"];                                                      //[4]
                     $sub_array[] = date_format(date_create($row["FEC_MODIFICACION"]), "d/m/Y h:i:s A"); //[5]
                     $sub_array[] = $row["USR_MODIFICACION"];                                            //[6]
@@ -156,9 +156,9 @@
                     $query2 = "SELECT COUNT(TOTAL) AS TOTAL
                                 FROM(
                                     SELECT DISTINCT
-                                        A.NJPER_ID TOTAL
-                                    FROM SRD_JCI_PERIODO A
-                                    INNER JOIN SRD_JCI_ENCUESTAS B ON B.NJPER_ID = A.NJPER_ID
+                                        A.NPERI_ID TOTAL
+                                    FROM srd_periodo A
+                                    INNER JOIN SRD_JCI_ENCUESTAS B ON B.NPERI_ID = A.NPERI_ID
                                     WHERE A.NAUDI_EST_REG = 1 ";
                     
                     //Filtros de Busqueda personalizados

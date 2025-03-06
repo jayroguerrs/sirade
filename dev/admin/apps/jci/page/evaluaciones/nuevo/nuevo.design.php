@@ -69,15 +69,15 @@
                                             data-placeholder="Seleccione un periodo" data-allow-clear="true">
                                         <option></option>
                                         <?php
-                                            $sql = "SELECT DISTINCT 
+                                            $sql = "SELECT 
                                                         A.NPERI_ID,
                                                         B.CPERI_DESCRIPCION
                                                     FROM SRD_JCI_ENCUESTAS A
                                                     INNER JOIN SRD_PERIODO B ON A.NPERI_ID = B.NPERI_ID
                                                     INNER JOIN SRD_JCI_AREAS_SUPER C ON C.CAREA_ID = A.CAREA_ID 
-                                                    WHERE C.NUSUA_ID = 1 AND 
+                                                    WHERE C.NUSUA_ID = " . $_SESSION['id'] . " AND 
                                                         A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND B.CAPLI_ID = 'ENF_003'
-                                                    GROUP BY B.DPERI_FIN DESC;";
+                                                    GROUP BY A.NPERI_ID ORDER BY B.DPERI_FIN DESC;";
                                             $result = $conn->query($sql);
                                             if ($result->num_rows > 0) {
                                                 // output data of each row

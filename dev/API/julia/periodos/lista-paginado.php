@@ -163,7 +163,7 @@
                 function get_all_data($connect)
                 {
                     $query2 = "SELECT COUNT(DISTINCT A.NPERI_ID) AS TOTAL
-                                FROM SRD_JCI_PERIODO A 
+                                FROM SRD_PERIODO A 
                                 WHERE A.NAUDI_EST_REG = 1 ";
         
                     $result = $connect->query($query2);

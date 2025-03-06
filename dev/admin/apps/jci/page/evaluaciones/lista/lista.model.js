@@ -45,10 +45,10 @@ var KTEvaluacion = function() {
                 },
             },
             columns: [
-              { data: 0, name: 'NJPER_ID' },
-              { data: 1, name: 'CJPER_DESCRIPCION' },
-              { data: 2, name: 'DJPER_INICIO' },
-              { data: 3, name: 'DJPER_FIN' },
+              { data: 0, name: 'NPERI_ID' },
+              { data: 1, name: 'CPERI_DESCRIPCION' },
+              { data: 2, name: 'DPERI_INICIO' },
+              { data: 3, name: 'DPERI_FIN' },
               { data: 4, name: 'ESTADO' },
               { data: 5, name: 'FEC_MODIFICACION' },
               { data: 6, name: 'USR_MODIFICACION' }
@@ -184,7 +184,7 @@ var KTEvaluacion = function() {
               { data: 5, name: 'CAREA_ID' },
               { data: 6, name: 'CNACI_DESCRIPCION' },
               { data: 7, name: 'CNACI_IMAGEN' },
-              { data: 8, name: 'NJPER_ID' },
+              { data: 8, name: 'NPERI_ID' },
               { data: 9, name: 'AVANCE' },
               { data: 10, name: 'PUNTAJE' },
               { data: 11, name: 'PUNTAJE_MAX' },
@@ -300,65 +300,7 @@ var KTEvaluacion = function() {
                   }
                 }
             ],
-            buttons: [
-              {
-                extend: "collection",
-                className: "btn btn-label-secondary dropdown-toggle mx-3",
-                text: '<i class="bx bx-upload me-2"></i>Exportar',
-                buttons: [
-                  {
-                    extend: "print",
-                    text: '<i class="bx bx-printer me-2" ></i>Imprimir',
-                    className: "dropdown-item",
-                    action: newexportaction,
-                    exportOptions: { columns: [1, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] },
-                  },
-                  {
-                    extend: "csv",
-                    bom: "true",
-                    text: '<i class="bx bx-file me-2" ></i>Csv',
-                    className: "dropdown-item",
-                    action: newexportaction,
-                    exportOptions: { columns: [1, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] },
-                    filename: "Reporte de Encuestas",
-                  },
-                  {
-                    extend: 'excel',
-                    text: '<i class="bx bx-file me-2" ></i>Excel',
-                    className: "dropdown-item",
-                    action: newexportaction,
-                    exportOptions: { columns: [1, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] },
-                    filename: "Reporte de Encuestas",
-                  },
-                  {
-                    extend: "pdf",
-                    text: '<i class="bx bxs-file-pdf me-2"></i>Pdf',
-                    className: "dropdown-item",
-                    action: newexportaction,
-                    exportOptions: { columns: [1, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] },
-                    customize: function (doc) {
-                      doc.content.unshift({
-                          text: 'Reporte de Encuestas', // Texto del encabezado
-                          fontSize: 14, // Tamaño de fuente
-                          alignment: 'center', // Alineación
-                          margin: [0, 10], // Margen superior e inferior
-                      });
-                      doc.defaultStyle.fontSize = 9;
-                      doc.styles.tableHeader.fontSize = 11;
-                      doc.pageOrientation = 'landscape'; // Cambiar a orientación horizontal
-                      doc.pageSize = 'A4'; // Cambiar el tamaño del papel (por ejemplo, A4)
-                  },
-                  },
-                  {
-                    extend: "copy",
-                    text: '<i class="bx bx-copy me-2" ></i>Copiar',
-                    className: "dropdown-item",
-                    action: newexportaction,
-                    exportOptions: { columns: [1, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] },
-                  },
-                ],
-              }
-          ],
+            
 
           });
 
@@ -643,26 +585,26 @@ function ObtenerDatosServicio(){
 }
 
 function ObtenerDatosEncuesta(){
-  var estado;
-  var chkActivo = Boolean(document.querySelector(`input[name="filtro3-estado"][value="1"]`).checked);
-  var chkInactivo = Boolean(document.querySelector(`input[name="filtro3-estado"][value="0"]`).checked);
+    var estado;
+    var chkActivo = Boolean(document.querySelector(`input[name="filtro3-estado"][value="1"]`).checked);
+    var chkInactivo = Boolean(document.querySelector(`input[name="filtro3-estado"][value="0"]`).checked);
 
-  if (chkActivo == false && chkInactivo == false) {
-      estado = '';
-  } else if (chkActivo == true && chkInactivo == false) {
-      estado = '1';
-  } else if (chkActivo == false && chkInactivo == true) {
-      estado = '0';
-  }
-  
-  var datos = new Array();
-  datos['servicio'] = $("#tb_servicios").DataTable().row('.selected').data()[0];
-  datos['periodo'] = $("#tb_periodos").DataTable().row('.selected').data()[0];
-  datos['nacionalidad'] = $("[name='filtro3-nacionalidad']").val();
-  datos['personal'] = $("[name='filtro3-personal']").val();
-  datos['estado'] = estado;
-  datos['usuario'] = $("#session_usuario_id").val();
-  datos['usuario_rol'] = $("#session_rol_id").val();
+    if (chkActivo == false && chkInactivo == false) {
+        estado = '';
+    } else if (chkActivo == true && chkInactivo == false) {
+        estado = '1';
+    } else if (chkActivo == false && chkInactivo == true) {
+        estado = '0';
+    }
+    
+    var datos = new Array();
+    datos['servicio'] = $("#tb_servicios").DataTable().row('.selected').data()[0];
+    datos['periodo'] = $("#tb_periodos").DataTable().row('.selected').data()[0];
+    datos['nacionalidad'] = $("[name='filtro3-nacionalidad']").val();
+    datos['personal'] = $("[name='filtro3-personal']").val();
+    datos['estado'] = estado;
+    datos['usuario'] = $("#session_usuario_id").val();
+    datos['usuario_rol'] = $("#session_rol_id").val();
 
-  return datos;
+    return datos;
 }
