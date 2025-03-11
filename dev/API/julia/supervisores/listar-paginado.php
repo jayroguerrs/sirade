@@ -21,6 +21,7 @@
             
             $contador = 0;
             $erray = array();
+            $est = 0;
             session_start();
             $contadorsession = 0;
 
@@ -100,10 +101,12 @@
                                 B.CUSUA_NOMBRES,
                                 C.CAREA_DESCRIPCION,
                                 D.CPERI_DESCRIPCION,
-                                FN_OBTENER_NOMBRE_ESTADO(A.NSAPE_ESTADO) ESTADO,
+                                Z.CCADE_NOMBRE ESTADO,
                                 IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
-                                FN_OBTENER_NOMBRE_POR_ID(IFNULL(A.NAUDI_REG_UPD , A.NAUDI_REG_INS)) USR_MODIFICACION
+                                CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                             FROM SRD_SUPER_AREAS_PERIODO A
+                            LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NSAPE_ESTADO
+                            LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
                             INNER JOIN SRD_USUARIOS B ON A.NUSUA_ID_SUPERVISOR = B.NUSUA_ID
                             INNER JOIN SRD_AREAS C ON A.CAREA_ID = C.CAREA_ID
                             INNER JOIN SRD_PERIODO D ON A.NPERI_ID = D.NPERI_ID
@@ -131,7 +134,7 @@
                 
                 if (isset($_POST["search"]["value"])) {
                     $query .= '(B.CUSUA_NOMBRES LIKE "%' . $_POST["search"]["value"] . '%" ';    
-                    $query .= 'OR FN_OBTENER_NOMBRE_ESTADO(A.NSAPE_ESTADO) LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= 'OR Z.CCADE_NOMBRE LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
                 
                 if (isset($_POST["order"])) {

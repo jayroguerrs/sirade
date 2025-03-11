@@ -117,9 +117,9 @@
                                     G.CNACI_IMAGEN,
                                     D.NJRESP_VALOR AS NOTA,
                                     IF(D.NJRESP_VALOR IS NULL, NULL, MAX(F.NJRESP_VALOR)) AS NOTA_MAXIMA,
-                                    FN_OBTENER_NOMBRE_ESTADO(B.NJENC_ESTADO) ESTADO,
-                                    IFNULL(B.DAUDI_REG_UPD, B.DAUDI_REG_INS) FEC_MODIFICACION,
-                                    FN_OBTENER_NOMBRE_POR_ID(IFNULL(B.NAUDI_REG_UPD, B.NAUDI_REG_INS)) USR_MODIFICACION
+                                    Z.CCADE_NOMBRE ESTADO,
+                                    IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
+                                    CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                                 FROM SRD_JCI_ENCUESTAS_PREG A
                                 RIGHT JOIN SRD_JCI_ENCUESTAS B ON B.NJENC_ID = A.NJENC_ID
                                 INNER JOIN SRD_USUARIOS C ON B.NUSUA_ID = C.NUSUA_ID
@@ -179,10 +179,12 @@
                                 '0' PREG_CONTESTADAS,
                                 (SELECT COUNT(*) FROM SRD_JCI_PREGUNTAS) TOTAL_PREGUNTAS,
                                 '0' AVANCE,
-                                FN_OBTENER_NOMBRE_ESTADO(A.NJENC_ESTADO) ESTADO,
+                                Z.CCADE_NOMBRE ESTADO,
                                 IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
-                                FN_OBTENER_NOMBRE_POR_ID(IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS)) USR_MODIFICACION
+                                CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                             FROM SRD_JCI_ENCUESTAS A
+                            LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NJENC_ESTADO
+                            LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
                             INNER JOIN SRD_USUARIOS B ON A.NUSUA_ID = B.NUSUA_ID
                             LEFT JOIN SRD_JCI_ENCUESTAS_PREG C ON A.NJENC_ID = C.NJENC_ID
                             LEFT JOIN SRD_JCI_RESPUESTAS D ON C.NJRESP_ID = D.NJRESP_ID

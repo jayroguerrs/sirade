@@ -125,7 +125,7 @@ var KTSupervisorList = function() {
             ]
         });
 
-        dt1.on('draw.dt', function () {
+        dt1.on('draw.dt1', function () {
           dt1.row(':eq(0)').select();
         });
 
@@ -160,7 +160,7 @@ var KTSupervisorList = function() {
         filterSearch.addEventListener('change', function(e) {
             const currentValue = e.target.value;
             if (currentValue !== previousValue) {
-                dt.search(currentValue).draw();
+                dt1.search(currentValue).draw();
                 previousValue = currentValue; // Actualizar el valor anterior
             }
         });
@@ -264,11 +264,11 @@ var KTSupervisorList = function() {
                                     $('#kt_modal_agregar_supervisor').modal('hide');
 
                                     // Configurar el orden antes de la recarga
-                                    dt.order([6, 'desc']);
+                                    dt1.order([6, 'desc']);
 
                                     // Usar una promesa para manejar la recarga
                                     new Promise((resolve) => {
-                                        dt.ajax.reload(() => {
+                                        dt1.ajax.reload(() => {
                                             resolve(); // Resolver la promesa después de la recarga
                                         }, false);
                                     }).then(() => {
@@ -298,8 +298,7 @@ var KTSupervisorList = function() {
             }
         });
     }
-
-    
+ 
     // Reset Filter
     var handleSubmitFiltro = () => {
         // Select filtrar button
@@ -315,7 +314,7 @@ var KTSupervisorList = function() {
         
              // Usar una promesa para manejar la recarga
             new Promise((resolve) => {
-                dt.ajax.reload(function() {
+                dt1.ajax.reload(function() {
                     resolve(); // Resolver la promesa después de la recarga
                 });
             }).then(() => {
@@ -342,7 +341,7 @@ var KTSupervisorList = function() {
             
             // Usar una promesa para manejar la recarga
             new Promise((resolve) => {
-                dt.ajax.reload(function() {
+                dt1.ajax.reload(function() {
                     resolve(); // Resolver la promesa después de la recarga
                 });
             }).then(() => {
@@ -368,14 +367,14 @@ var KTSupervisorList = function() {
             msgLoad("Procesando...");
             
             // Crear un nuevo objeto FormData
-            var datos = new FormData(formRubro);
+            var datos = new FormData(formServicio);
             datos.append('servicio', $('[name="filtro-servicio"]').val());
             datos.append('supervisor', $('[name="filtro-supervisor"]').val());
             datos.append('periodo', $('[name="filtro-periodo"]').val());
             datos.append('usuario', $("#session_usuario_id").val());
             datos.append('usuario_rol', $("#session_rol_id").val());
             
-            fetch(`${environment.apiSRD}/API/supervisores/listar`, {
+            fetch(`${environment.apiSRD}/API/julia/supervisores/listar`, {
                 method: 'POST',
                 body: datos
             }).then(response => {
@@ -530,11 +529,11 @@ function EliminarSupervisor(id) {
         }).then(Response => Response.json())
         .then(datos => {
             if (datos.estado == 1) {
-                var dt = $("#tb_supervisores").DataTable();
+                var dt1 = $("#tb_supervisores").DataTable();
                 
                 // Usar una promesa para manejar la recarga
                 new Promise((resolve) => {
-                    dt.ajax.reload(function() {
+                    dt1.ajax.reload(function() {
                         // Modificar los parámetros de ordenamiento
                         resolve(); // Resolver la promesa después de la recarga
                     });

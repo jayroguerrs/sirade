@@ -115,10 +115,12 @@
                                 A.CJRESP_CLASE,
                                 A.CJRESP_ICONO,
                                 A.NJRESP_ORDEN,
-                                FN_OBTENER_NOMBRE_ESTADO(A.NJRESP_ESTADO) ESTADO,
+                                Z.CCADE_NOMBRE ESTADO,
                                 IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
-                                FN_OBTENER_NOMBRE_POR_ID(IFNULL(A.NAUDI_REG_UPD , A.NAUDI_REG_INS)) USR_MODIFICACION
+                                CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                             FROM SRD_JCI_RESPUESTAS A
+                            LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NJRESP_ESTADO
+                            LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
                             WHERE ";
                 
                 //Filtros de Busqueda personalizados
@@ -136,7 +138,7 @@
                 if (isset($_POST["search"]["value"])) {
                     $query .= '(A.CJRESP_DESCRIPCION LIKE "%' . $_POST["search"]["value"] . '%" ';    
                     $query .= 'OR A.NJRESP_VALOR LIKE "%' . $_POST["search"]["value"] . '%" ';    
-                    $query .= 'OR FN_OBTENER_NOMBRE_ESTADO(A.NJRESP_ESTADO) LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= 'OR Z.CCADE_NOMBRE LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
                 
                 if (isset($_POST["order"])) {

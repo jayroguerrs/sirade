@@ -74,10 +74,12 @@
                                 A.CJPER_ID,
                                 B.DPERI_INICIO,
                                 B.DPERI_FIN,
-                                FN_OBTENER_NOMBRE_ESTADO(B.NPERI_ESTADO) ESTADO,
-                                IFNULL(B.DAUDI_REG_UPD, B.DAUDI_REG_INS) FEC_MODIFICACION,
-                                FN_OBTENER_NOMBRE_POR_ID(IFNULL(B.NAUDI_REG_UPD, B.NAUDI_REG_INS)) USR_MODIFICACION
+                                Z.CCADE_NOMBRE ESTADO,
+                                IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
+                                CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                             FROM SRD_JCI_ENCUESTAS A
+                            LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NJPER_ESTADO
+                            LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
                             INNER JOIN SRD_PERIODO B ON A.CJPER_ID = B.CJPER_ID
                             INNER JOIN SRD_JCI_AREAS_SUPER C ON A.CAREA_ID = C.CAREA_ID
                             WHERE ";
@@ -96,7 +98,7 @@
                 
                 if (isset($_POST["search"]["value"])) {
                     $query .= '(A.CJPER_ID LIKE "%' . $_POST["search"]["value"] . '%" ';    
-                    $query .= 'OR FN_OBTENER_NOMBRE_ESTADO(B.NPERI_ESTADO) LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= 'OR Z.CCADE_NOMBRE LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
                 
                 $query .= " GROUP BY CJPER_ID  ";
