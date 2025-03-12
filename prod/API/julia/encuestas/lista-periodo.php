@@ -64,21 +64,23 @@
             if ($contador == 0) {
                 $column = array(
                     'CJPER_ID',
-                    'DJPER_INICIO',
-                    'DJPER_FIN',
+                    'DPERI_INICIO',
+                    'DPERI_FIN',
                     'ESTADO',
                     'FEC_MODIFICACION',
                     'USR_MODIFICACION'
                 );
                 $query = " SELECT
                                 A.CJPER_ID,
-                                B.DJPER_INICIO,
-                                B.DJPER_FIN,
-                                FN_OBTENER_NOMBRE_ESTADO(B.NJPER_ESTADO) ESTADO,
-                                IFNULL(B.DAUDI_REG_UPD, B.DAUDI_REG_INS) FEC_MODIFICACION,
-                                FN_OBTENER_NOMBRE_POR_ID(IFNULL(B.NAUDI_REG_UPD, B.NAUDI_REG_INS)) USR_MODIFICACION
+                                B.DPERI_INICIO,
+                                B.DPERI_FIN,
+                                Z.CCADE_NOMBRE ESTADO,
+                                IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
+                                CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                             FROM SRD_JCI_ENCUESTAS A
-                            INNER JOIN SRD_JCI_PERIODO B ON A.CJPER_ID = B.CJPER_ID
+                            LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NJPER_ESTADO
+                            LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
+                            INNER JOIN SRD_PERIODO B ON A.CJPER_ID = B.CJPER_ID
                             INNER JOIN SRD_JCI_AREAS_SUPER C ON A.CAREA_ID = C.CAREA_ID
                             WHERE ";
                 
@@ -88,7 +90,7 @@
                 }
         
                 if (!empty($V_ESTA) && isset($V_ESTA)) {
-                    $query .= "B.NJPER_ESTADO = " . $V_ESTA . " AND ";
+                    $query .= "B.NPERI_ESTADO = " . $V_ESTA . " AND ";
                 }
                 //Fin Filtros de Busqueda personalizados
         
@@ -96,7 +98,7 @@
                 
                 if (isset($_POST["search"]["value"])) {
                     $query .= '(A.CJPER_ID LIKE "%' . $_POST["search"]["value"] . '%" ';    
-                    $query .= 'OR FN_OBTENER_NOMBRE_ESTADO(B.NJPER_ESTADO) LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= 'OR Z.CCADE_NOMBRE LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
                 
                 $query .= " GROUP BY CJPER_ID  ";
@@ -104,7 +106,7 @@
                 if (isset($_POST["order"])) {
                     $query .= 'ORDER BY ' . $column[$_POST['order']['0']['column']] . ' ' . $_POST['order']['0']['dir'] . ' ';
                 } else {
-                    $query .= 'ORDER BY B.DJPER_FIN DESC ';
+                    $query .= 'ORDER BY B.DPERI_FIN DESC ';
                 }
                 $query1 = '';
                 if ($_POST["length"] != -1) {
@@ -120,8 +122,8 @@
                 while($row = $result->fetch_assoc()) {
                     $sub_array = array();
                     $sub_array[] = $row["CJPER_ID"];                                                    //[0]
-                    $sub_array[] = date_format(date_create($row["DJPER_INICIO"]), "d/m/Y");             //[1]
-                    $sub_array[] = date_format(date_create($row["DJPER_FIN"]), "d/m/Y");                //[2]
+                    $sub_array[] = date_format(date_create($row["DPERI_INICIO"]), "d/m/Y");             //[1]
+                    $sub_array[] = date_format(date_create($row["DPERI_FIN"]), "d/m/Y");                //[2]
                     $sub_array[] = $row["ESTADO"];                                                      //[3]
                     $sub_array[] = date_format(date_create($row["FEC_MODIFICACION"]), "d/m/Y h:i:s A"); //[4]
                     $sub_array[] = $row["USR_MODIFICACION"];                                            //[5]
@@ -134,7 +136,7 @@
                                 FROM(
                                     SELECT DISTINCT
                                         A.CJPER_ID TOTAL
-                                    FROM SRD_JCI_PERIODO A
+                                    FROM SRD_PERIODO A
                                     INNER JOIN SRD_JCI_ENCUESTAS B ON B.CJPER_ID = A.CJPER_ID
                                     WHERE A.NAUDI_EST_REG = 1 ";
                     

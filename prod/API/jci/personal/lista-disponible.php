@@ -16,16 +16,6 @@
         $V_SERV = !isset($_POST["servicio"]) ? null : ($_POST["servicio"] == '' ? null : $_POST["servicio"]);
         $V_DESE = !isset($_POST["desempenio"]) ? null : ($_POST["desempenio"] == '' ? null : $_POST["desempenio"]);
 
-        $column = array(
-            'NUSUA_ID',
-            'CUSUA_CODIGO',
-            'CUSUA_NOMBRES',
-            'CUSUA_IMG',
-            'CNACI_DESCRIPCION',
-            'CNACI_IMAGEN',
-            'CAREA_ID',
-            'CDESE_DESCRIPCION'
-        );
         $query = "SELECT 
                     A.NUSUA_ID,
                     A.CUSUA_CODIGO,
@@ -42,7 +32,7 @@
         
         //Inicio Filtros de Busqueda personalizados
         if (!empty($V_PERI) && isset($V_PERI)) {
-            $query .= " AND B.NJPER_ID = " . $V_PERI . "";
+            $query .= " AND B.NPERI_ID = " . $V_PERI . "";
         }
 
         if (!empty($V_SERV) && isset($V_SERV)) {
@@ -62,7 +52,7 @@
             $query .= 'AND (A.CUSUA_NOMBRES LIKE "%' . $_POST["search"]["value"] . '%") ';
         }
         if (isset($_POST["order"])) {
-            $query .= 'ORDER BY ' . $column[$_POST['order']['0']['column']] . ' ' . $_POST['order']['0']['dir'] . ' ';
+            $query .= 'ORDER BY ' . $_POST['columns'][$_POST['order']['0']['column']]['name'] . ' ' . $_POST['order']['0']['dir'] . ' ';
         } else {
             $query .= 'ORDER BY A.CUSUA_NOMBRES ASC ';
         }
@@ -72,7 +62,7 @@
         if ($_POST["length"] != -1) {
             $query1 .= 'LIMIT ' . $_POST['start'] . ', ' . $_POST['length'];
         }
-
+        
         $result = $conn->query($query);
         $number_filter_row = $result->num_rows;
 
@@ -101,7 +91,7 @@
             
             //Inicio Filtros de Busqueda personalizados
             if (!empty($V_PERI) && isset($V_PERI)) {
-                $query .= " AND B.NJPER_ID = " . $V_PERI . " ";
+                $query .= " AND B.NPERI_ID = " . $V_PERI . " ";
             }
             
             if (!empty($V_SERV) && isset($V_SERV)) {

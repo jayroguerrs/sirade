@@ -47,8 +47,11 @@
                 $contador += 1;
                 $earray[$contador] = $error;
             } else {
-                $stmt = $conn->prepare("SELECT NUSUA_ID, NROLE_ID FROM SRD_USUARIOS WHERE NUSUA_ID = ? AND NAUDI_EST_REG = 1;");
-                $stmt->bind_param("i", $V_ID);
+                $stmt = $conn->prepare("SELECT A.NUSUA_ID, B.NROLE_ID 
+                                        FROM SRD_USUARIOS A
+                                        INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
+                                        WHERE A.NUSUA_ID = ? AND B.NROLE_ID = ? AND A.NAUDI_EST_REG = 1;");
+                $stmt->bind_param("ii", $V_ID, $V_ROL);
                 $stmt->execute();
                 $stmt->store_result();
                 if ($stmt->num_rows > 0) {
@@ -57,22 +60,24 @@
                     if ( $idusuario != $_SESSION['id'] ) {
                         $error = 'El usuario no puede realizar dicha operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
                     if ( $idrol != $_SESSION['rol_id'] ) {
                         $error = 'El rol del usuario no corresponde a la operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
                     
-                    // VALIDAMOS QUE LA SESIÓN HAYA SIDO INICIADO
+                    // VALIDAMOS QUE LA SESIÓN HAYA SIDO INICIADA
                     if ($contadorsession != 0) {
                         session_destroy();
                     }
                 } else {
-                    $error = 'El ID del usuario no se encuentra registrado';
+                    $error = 'El ID del supervisor no se encuentra registrado';
                     $contador += 1;
                     $earray[$contador] = $error;
                 }

@@ -1,5 +1,5 @@
 {
-    "URL":"http://localhost/sirade/prod",
+    "URL":"http://localhost/sirade/dev",
     "token":"aCZCxQHA3Wc1itH8ycD800AymsQwtf0KmljWpHsrLgJc05GoZaMxP9eT0rzmboSaYTZRGxzUWY00tSUuAJ7iko7tdMLBcHYLoyPF3lOVYv0maSopUBoBT2VR",
     "database": {
       "host": "127.0.0.1",

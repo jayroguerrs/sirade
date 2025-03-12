@@ -29,10 +29,10 @@
                 $stmt = $conn->prepare("SELECT DISTINCT 
                                             A.CJPER_ID
                                         FROM SRD_JCI_ENCUESTAS A
-                                        INNER JOIN SRD_JCI_PERIODO B ON A.CJPER_ID = B.CJPER_ID
+                                        INNER JOIN SRD_PERIODO B ON A.CJPER_ID = B.CJPER_ID
                                         INNER JOIN SRD_JCI_AREAS_SUPER C ON C.CAREA_ID = A.CAREA_ID 
                                         WHERE C.NUSUA_ID = ? AND 
-                                            B.NJPER_ESTADO = 1 AND B.NAUDI_EST_REG = 1 AND 
+                                            B.NPERI_ESTADO = 1 AND B.NAUDI_EST_REG = 1 AND 
                                             A.NJENC_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND 
                                             C.NASUP_ESTADO = 1 AND C.NAUDI_EST_REG = 1;");
                 $stmt->bind_param("i", $V_SUPER);

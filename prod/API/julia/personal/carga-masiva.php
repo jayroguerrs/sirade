@@ -147,7 +147,12 @@
                         
                         if ($contador2 == 0) {
                             //VERIFICAMOS SI EL USUARIO EXISTE
-                            $stmt = $conn->prepare("SELECT NUSUA_ID, FN_OBTENER_NOMBRE_ESTADO(NUSUA_ESTADO) FROM SRD_USUARIOS WHERE CUSUA_CODIGO = ? AND NAUDI_EST_REG = 1;");
+                            $stmt = $conn->prepare("SELECT 
+                                                        A.NUSUA_ID, 
+                                                        Z.CCADE_NOMBRE ESTADO
+                                                    FROM SRD_USUARIOS A
+                                                    LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NUSUA_ESTADO
+                                                    WHERE A.CUSUA_CODIGO = ? AND A.NAUDI_EST_REG = 1;");
                             $stmt->bind_param("s", $codigo);
                             $stmt->execute();
                             $stmt->store_result();

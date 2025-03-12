@@ -226,12 +226,13 @@
                                                 data-placeholder="Seleccione un supervisor" data-allow-clear="true" data-dropdown-parent="#kt_modal_agregar_servicio">
                                             <option></option>
                                             <?php
-                                                $sql = "SELECT DISTINCT 
+                                                $sql = "SELECT 
                                                             A.NUSUA_ID,
                                                             A.CUSUA_NOMBRES
-                                                        FROM SRD_USUARIOS A
-                                                        WHERE A.NUSUA_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND A.NROLE_ID = 3
-                                                        ORDER BY A.CUSUA_NOMBRES ASC;";
+                                                        FROM sirade.SRD_USUARIOS A
+                                                        INNER JOIN sirade.srd_roles_usuario B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1 
+                                                        WHERE A.NUSUA_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND B.NROLE_ID = 3
+                                                        GROUP BY A.NUSUA_ID ORDER BY A.CUSUA_NOMBRES ASC;";
                                                 $result = $conn->query($sql);
                                                 if ($result->num_rows > 0) {
                                                     // output data of each row
@@ -383,12 +384,13 @@
                                             data-placeholder="Seleccione un supervisor" data-allow-clear="true" data-dropdown-parent="#kt_servicio_filtro_modal">
                                         <option></option>
                                         <?php
-                                            $sql = "SELECT DISTINCT 
+                                            $sql = "SELECT 
                                                         A.NUSUA_ID,
                                                         A.CUSUA_NOMBRES
-                                                    FROM SRD_USUARIOS A
-                                                    WHERE A.NUSUA_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND A.NROLE_ID = 3
-                                                    ORDER BY A.CUSUA_NOMBRES ASC;";
+                                                    FROM sirade.SRD_USUARIOS A
+                                                    INNER JOIN sirade.srd_roles_usuario B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1 
+                                                    WHERE A.NUSUA_ESTADO = 1 AND A.NAUDI_EST_REG = 1 AND B.NROLE_ID = 3
+                                                    GROUP BY A.NUSUA_ID ORDER BY A.CUSUA_NOMBRES ASC;";
                                             $result = $conn->query($sql);
                                             if ($result->num_rows > 0) {
                                                 // output data of each row

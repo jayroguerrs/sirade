@@ -24,14 +24,17 @@
             session_start();
             $contadorsession = 0;
 
-            // VALIDAMOS EL ID DEL SUPERVISOR
+            // VALIDAMOS EL ID DEL USUARIO
             if ( $V_ID === NULL || $V_ID == '' ) {
-                $error = 'El ID del supervisor es obligatorio';
+                $error = 'El ID del usuario es obligatorio';
                 $contador += 1;
                 $earray[$contador] = $error;
             } else {
-                $stmt = $conn->prepare("SELECT NUSUA_ID, NROLE_ID FROM SRD_USUARIOS WHERE NUSUA_ID = ? AND NAUDI_EST_REG = 1;");
-                $stmt->bind_param("i", $V_ID);
+                $stmt = $conn->prepare("SELECT A.NUSUA_ID, B.NROLE_ID 
+                                        FROM SRD_USUARIOS A
+                                        INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
+                                        WHERE A.NUSUA_ID = ? AND B.NROLE_ID = ? AND A.NAUDI_EST_REG = 1;");
+                $stmt->bind_param("ii", $V_ID, $V_ROL);
                 $stmt->execute();
                 $stmt->store_result();
                 if ($stmt->num_rows > 0) {
@@ -40,12 +43,14 @@
                     if ( $idusuario != $_SESSION['id'] ) {
                         $error = 'El usuario no puede realizar dicha operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
                     if ( $idrol != $_SESSION['rol_id'] ) {
                         $error = 'El rol del usuario no corresponde a la operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
@@ -103,10 +108,12 @@
                                 A.NJCAP_ID,
                                 A.CJCAP_NOMBRE,
                                 A.NJCAP_ORDEN,
-                                FN_OBTENER_NOMBRE_ESTADO(A.NJCAP_ESTADO) ESTADO,
+                                Z.CCADE_NOMBRE ESTADO,
                                 IFNULL(A.DAUDI_REG_UPD, A.DAUDI_REG_INS) FEC_MODIFICACION,
-                                FN_OBTENER_NOMBRE_POR_ID(IFNULL(A.NAUDI_REG_UPD , A.NAUDI_REG_INS)) USR_MODIFICACION
+                                CONCAT(Y.CUSUA_CODIGO, ' - ', Y.CUSUA_NOMBRES) AS USR_MODIFICACION
                             FROM SRD_JCI_CATEGORIA_PREG A
+                            LEFT JOIN SRD_CATALOGO_DETALLE Z ON Z.NCATA_ID = 11 AND Z.CCADE_CODIGO = A.NJCAP_ESTADO
+                            LEFT JOIN SRD_USUARIOS Y ON Y.NUSUA_ID = IFNULL(A.NAUDI_REG_UPD, A.NAUDI_REG_INS) AND Y.NUSUA_ESTADO = 1 AND Y.NAUDI_EST_REG = 1
                             WHERE ";
                 
                 //Filtros de Busqueda personalizados
@@ -123,7 +130,7 @@
                 
                 if (isset($_POST["search"]["value"])) {
                     $query .= '(A.CJCAP_NOMBRE LIKE "%' . $_POST["search"]["value"] . '%" ';
-                    $query .= 'OR FN_OBTENER_NOMBRE_ESTADO(A.NJCAP_ESTADO) LIKE "%' . $_POST["search"]["value"] . '%") ';
+                    $query .= 'OR Z.CCADE_NOMBRE LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
                 
                 if (isset($_POST["order"])) {

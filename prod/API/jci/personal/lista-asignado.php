@@ -24,14 +24,17 @@
             session_start();
             $contadorsession = 0;
 
-            // VALIDAMOS EL ID DEL SUPERVISOR
+            // VALIDAMOS EL ID DEL USUARIO
             if ( $V_ID === NULL || $V_ID == '' ) {
-                $error = 'El ID del supervisor es obligatorio';
+                $error = 'El ID del usuario es obligatorio';
                 $contador += 1;
                 $earray[$contador] = $error;
             } else {
-                $stmt = $conn->prepare("SELECT NUSUA_ID, NROLE_ID FROM SRD_USUARIOS WHERE NUSUA_ID = ? AND NAUDI_EST_REG = 1;");
-                $stmt->bind_param("i", $V_ID);
+                $stmt = $conn->prepare("SELECT A.NUSUA_ID, B.NROLE_ID 
+                                        FROM SRD_USUARIOS A
+                                        INNER JOIN SRD_ROLES_USUARIO B ON A.NUSUA_ID = B.NUSUA_ID AND B.NROSU_ESTADO = 1 AND B.NAUDI_EST_REG = 1
+                                        WHERE A.NUSUA_ID = ? AND B.NROLE_ID = ? AND A.NAUDI_EST_REG = 1;");
+                $stmt->bind_param("ii", $V_ID, $V_ROL);
                 $stmt->execute();
                 $stmt->store_result();
                 if ($stmt->num_rows > 0) {
@@ -40,12 +43,14 @@
                     if ( $idusuario != $_SESSION['id'] ) {
                         $error = 'El usuario no puede realizar dicha operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
                     if ( $idrol != $_SESSION['rol_id'] ) {
                         $error = 'El rol del usuario no corresponde a la operación';
                         $contador += 1;
+                        $est = 2;
                         $contadorsession += 1;
                         $earray[$contador] = $error;
                     }
@@ -63,18 +68,7 @@
             }
 
             if ($contador == 0) {
-                $column = array(
-                    'NUSUA_ID',
-                    'NJENC_ID',
-                    'CUSUA_CODIGO',
-                    'CUSUA_NOMBRES',
-                    'CUSUA_IMG',
-                    'CNACI_DESCRIPCION',
-                    'CNACI_IMAGEN',
-                    'CAREA_ID',
-                    'SUPERVISOR',
-                    'CDESE_DESCRIPCION'
-                );
+
                 $query = "SELECT
                             A.NUSUA_ID,
                             A.NJENC_ID,
@@ -97,7 +91,7 @@
                 
                 //Inicio Filtros de Busqueda personalizados
                 if (!empty($V_PERI) && isset($V_PERI)) {
-                    $query .= " A.NJPER_ID = '" . $V_PERI . "' AND ";
+                    $query .= " A.NPERI_ID = '" . $V_PERI . "' AND ";
                 }
     
                 if (!empty($V_ESTA) && isset($V_ESTA)) {
@@ -119,7 +113,7 @@
                     $query .= 'AND (B.CUSUA_NOMBRES LIKE "%' . $_POST["search"]["value"] . '%") ';
                 }
                 if (isset($_POST["order"])) {
-                    $query .= 'ORDER BY ' . $column[$_POST['order']['0']['column']] . ' ' . $_POST['order']['0']['dir'] . ' ';
+                    $query .= 'ORDER BY ' . $_POST['columns'][$_POST['order']['0']['column']]['name'] . ' ' . $_POST['order']['0']['dir'] . ' ';
                 } else {
                     $query .= 'ORDER BY B.CUSUA_NOMBRES ASC ';
                 }
@@ -145,7 +139,7 @@
                     $sub_array[] = $row["CUSUA_IMG"];                                   //[4]
                     $sub_array[] = ucwords($row["CNACI_DESCRIPCION"]);                  //[5]
                     $sub_array[] = $row["CNACI_IMAGEN"];                                //[6]
-                    $sub_array[] = $row["CAREA_DESCRIPCION"];                                    //[7]
+                    $sub_array[] = $row["CAREA_DESCRIPCION"];                           //[7]
                     $sub_array[] = $row["SUPERVISOR"];                                  //[8]
                     $sub_array[] = $row["CDESE_DESCRIPCION"];                           //[9]
                     $data[] = $sub_array;
@@ -162,7 +156,7 @@
                     
                     //Inicio Filtros de Busqueda personalizados
                     if (!empty($V_PERI) && isset($V_PERI)) {
-                        $query .= " AND A.NJPER_ID = '" . $V_PERI . "' ";
+                        $query .= " AND A.NPERI_ID = '" . $V_PERI . "' ";
                     }
     
                     if (!empty($V_ID) && isset($V_ID) && $V_ROL != 1 ) {
