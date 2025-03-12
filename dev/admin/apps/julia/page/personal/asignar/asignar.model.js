@@ -36,7 +36,7 @@ var KTPersonalList = function() {
 
     $("[name='servicio']").on('change.select2', function() {
         // Vuelve a cargar los datos del DataTable
-        dt2.ajax.reload();
+        //dt2.ajax.reload();
     });
 
     $("[name='periodo']").on('change.select2', function() {
