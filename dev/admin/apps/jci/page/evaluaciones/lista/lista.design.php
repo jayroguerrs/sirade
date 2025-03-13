@@ -281,24 +281,16 @@
                     <thead>
                         <tr class="text-start text-gray-400 fw-bold fs-8 text-uppercase gs-0">
                             <th class="min-w-80px">Acciones</th>
-                            <th>Key</th>
-                            <th>Código Trabajador</th>
-                            <th>Imagen Trabajador</th>
+                            <th>Id encuesta</th>
                             <th class="min-w-300px">Colaborador</th>
-                            <th>Correo</th>
-                            <th>Servicio</th>
                             <th class="min-w-125px">Nacionalidad</th>
                             <th>Imagen Nac</th>
+                            <th>Servicio</th>
                             <th>Periodo</th>
+                            <th>Usuario</th>
+                            <th>Imagen Usuario</th>
                             <th class="min-w-75px">Avance</th>
-                            <th>Puntaje</th>
-                            <th>Maximo</th>
                             <th class="min-w-85px">Nota</th>
-                            <th>Contestadas</th>
-                            <th>Total Preguntas</th>
-                            <th class="min-w-100px">Estado</th>
-                            <th class="min-w-100px">Creado</th>
-                            <th class="min-w-100px">Creado por</th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-600 fw-semibold">

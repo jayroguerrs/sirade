@@ -177,23 +177,15 @@ var KTEvaluacion = function() {
             columns: [
               { data: null, name: 'acciones'},
               { data: 0, name: 'NJENC_ID' },
-              { data: 1, name: 'NUSUA_ID' },
-              { data: 2, name: 'CUSUA_IMG' },
-              { data: 3, name: 'CUSUA_NOMBRES' },
-              { data: 4, name: 'CUSUA_CORREO' },
-              { data: 5, name: 'CAREA_ID' },
-              { data: 6, name: 'CNACI_DESCRIPCION' },
-              { data: 7, name: 'CNACI_IMAGEN' },
-              { data: 8, name: 'NPERI_ID' },
-              { data: 9, name: 'AVANCE' },
-              { data: 10, name: 'PUNTAJE' },
-              { data: 11, name: 'PUNTAJE_MAX' },
-              { data: 12, name: 'NOTA_PORC' },
-              { data: 13, name: 'PREG_CONTESTADAS' },
-              { data: 14, name: 'TOTAL_PREGUNTAS' },
-              { data: 15, name: 'ESTADO' },
-              { data: 16, name: 'FEC_MODIFICACION' },
-              { data: 17, name: 'USR_MODIFICACION' }
+              { data: 1, name: 'CUSUA_NOMBRES' },
+              { data: 2, name: 'CNACI_DESCRIPCION' },
+              { data: 3, name: 'CNACI_IMAGEN' },
+              { data: 4, name: 'CAREA_ID' },
+              { data: 5, name: 'NPERI_ID' },
+              { data: 6, name: 'NUSUA_ID' },
+              { data: 7, name: 'CUSUA_IMG' },
+              { data: 8, name: 'AVANCE' },
+              { data: 9, name: 'PUNTAJE' },
             ],
             columnDefs: [
                   { targets: 0, visible: true,
@@ -201,7 +193,7 @@ var KTEvaluacion = function() {
                     className: 'text-start',
                     render: function(data, type, row) {
                         return `
-                            <a href="?app=jci&page=evaluaciones/nuevo&periodo=${row[8]}&servicio=${row[5]}&colaborador=${row[1]}"" class="btn btn-sm btn-icon btn bg-light-info btn-active-color-primary w-30px h-30px">
+                            <a href="?app=jci&page=evaluaciones/nuevo&periodo=${row[5]}&servicio=${row[4]}&colaborador=${row[6]}"" class="btn btn-sm btn-icon btn bg-light-info btn-active-color-primary w-30px h-30px">
                                 <i class="ki-duotone ki-notepad-edit text-info fs-2">
                                     <span class="path1"></span>
                                     <span class="path2"></span>
@@ -223,12 +215,10 @@ var KTEvaluacion = function() {
                     }
                 },                                    //Acciones
                 { targets: 1, visible: false },       //Id Encuesta
-                { targets: 2, visible: false },       //Código Trabajador
-                { targets: 3, visible: false },       //Imagen Trabajador
-                { targets: 4, visible: true,          //Nombres Colaborador
+                { targets: 2, visible: true,          //Nombres Colaborador
                   className: 'd-flex align-items-center',
                   render: function (data, type, row) {
-                    var user_img = row[2];
+                    var user_img = row[7];
                     if (user_img != 'blank.png') {
                       // For Avatar image
                       var $output = '<div class=symbol-label><img src="assets/media/avatars/' + user_img + '" alt="Avatar" class="w-100"></div>';
@@ -260,45 +250,35 @@ var KTEvaluacion = function() {
                     `
                   }
                 },
-                { targets: 5, visible: false },       //Correo
-                { targets: 6, visible: false },       //ID Area
-                { targets: 7, visible: true,          //Nacionalidad                  
-                  render: function (data, type, row) {                    
-                    return `                        
-                      <!--begin::Flag-->
-                      <img src="assets/media/flags/${row[7]}" class="w-25px me-3" style="width: 20px;border-radius: 4px" alt="" />
-                      <!--end::Flag-->
-                      <span class="text-dark fw-bold fs-7">${data}</span>                      
-                    `
-                  }
-                },
-                { targets: 8, visible: false },         //Imagen nacionalidad
-                { targets: 9, visible: false },         //Periodo
-                { targets: 10, visible: true,           //Avance
+                { targets: 3, visible: true,
+                    render: function (data, type, row) {                    
+                        return `                        
+                          <!--begin::Flag-->
+                          <img src="assets/media/flags/${row[2]}" class="w-25px me-3" style="width: 20px;border-radius: 4px" alt="" />
+                          <!--end::Flag-->
+                          <span class="text-dark fw-bold fs-7">${data}</span>                      
+                        `
+                      }
+                },                                      //Nacionalidad
+                { targets: 4, visible: false },         //Imagen Colaborador
+                { targets: 5, visible: false },         //ID Area
+                { targets: 6, visible: false  },        //ID Periodo
+                { targets: 7, visible: false },         //ID Usuario
+                { targets: 8, visible: false },         //ID Usuario
+                { targets: 9, visible: true,            //Avance
                   render: function (data, type, row) {
                     return `
                       <div class="badge badge-light-${(data == '100.0' ? 'success' : 'danger')} fw-bold">${(data)}%</div>
                     `
                   }
                 },
-                { targets: 11, visible: false },        //Puntaje
-                { targets: 12, visible: false },        //Máximo
-                { targets: 13, visible: true,           //Nota 
+                { targets: 10, visible: true,           //Nota 
                   render: function (data, type, row) {
                     return `
                       <div class="badge badge-light-primary fw-bold" ${(row[9] != '100.0' ? 'data-bs-toggle="tooltip" data-bs-placement="top" title="Debe terminar la evaluación para ver la nota"' : '')}>${(row[9] != '100.0' ? '--' : data)} / 100</div>
                     `
                   }
                 },
-                { targets: 14, visible: false },        //Preguntas Contestadas
-                { targets: 15, visible: false },        //Total Preguntas
-                { targets: 16, visible: false,          //Estado
-                  render: function (data, type, row) {
-                    return `
-                      <div class="badge badge-light-${(data == 'ACTIVO' ? 'success' : 'danger')} fw-bold">${(data == 1 ? 'ACTIVO' : 'INACTIVO')}</div>
-                    `
-                  }
-                }
             ],
             
 
